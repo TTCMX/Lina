@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { margin: 0; background: oklch(0.985 0.006 85); font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    ::selection { background: oklch(0.88 0.05 200); }
+    input, textarea { font-family: 'Manrope', sans-serif; }
+    @keyframes lina-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes lina-pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  </style>
+</helmet>
+
+<div style="min-height: 100vh; display: flex; flex-direction: column; color: oklch(0.22 0.02 250); position: relative;">
+
+  <!-- HEADER -->
+  <header style="position: sticky; top: 0; z-index: 40; background: oklch(0.99 0.004 85 / 0.92); backdrop-filter: blur(10px); border-bottom: 1px solid oklch(0.91 0.01 250);">
+    <div style="max-width: min(1100px, 94vw); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 14px 0; gap: 12px;">
+      <div onClick="{{ goHome }}" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <div style="width: 10px; height: 10px; border-radius: 999px; background: oklch(0.72 0.09 80);"></div>
+        <span style="font-family: 'Newsreader', serif; font-size: 24px; font-weight: 600; letter-spacing: 0.3px;">Lina</span>
+      </div>
+      <nav style="display: none;"></nav>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button onClick="{{ agendarNow }}" style="background: oklch(0.47 0.09 200); color: white; border: none; padding: 10px 18px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap;">Agendar</button>
+        <button onClick="{{ toggleMenu }}" aria-label="Menú" style="background: none; border: 1px solid oklch(0.88 0.01 250); width: 42px; height: 42px; border-radius: 999px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 18px; height: 2px; background: oklch(0.22 0.02 250); border-radius: 2px;"></span>
+          <span style="width: 18px; height: 2px; background: oklch(0.22 0.02 250); border-radius: 2px;"></span>
+        </button>
+      </div>
+    </div>
+    <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="background: oklch(0.99 0.004 85); border-bottom: 1px solid oklch(0.91 0.01 250); padding: 8px min(3vw, 20px) 18px;">
+        <div style="max-width: min(1100px, 94vw); margin: 0 auto; display: flex; flex-direction: column;">
+          <button onClick="{{ goHome }}" style="text-align: left; background: none; border: none; border-bottom: 1px solid oklch(0.93 0.01 250); padding: 14px 4px; font-size: 17px; font-weight: 600; color: oklch(0.22 0.02 250); cursor: pointer;">Inicio</button>
+          <button onClick="{{ goServicios }}" style="text-align: left; background: none; border: none; border-bottom: 1px solid oklch(0.93 0.01 250); padding: 14px 4px; font-size: 17px; font-weight: 600; color: oklch(0.22 0.02 250); cursor: pointer;">Servicios</button>
+          <button onClick="{{ goNosotros }}" style="text-align: left; background: none; border: none; border-bottom: 1px solid oklch(0.93 0.01 250); padding: 14px 4px; font-size: 17px; font-weight: 600; color: oklch(0.22 0.02 250); cursor: pointer;">Nosotros</button>
+          <button onClick="{{ goContacto }}" style="text-align: left; background: none; border: none; padding: 14px 4px; font-size: 17px; font-weight: 600; color: oklch(0.22 0.02 250); cursor: pointer;">Contacto</button>
+        </div>
+      </div>
+    </sc-if>
+  </header>
+
+  <main style="flex: 1;">
+
+  <!-- ============ HOME ============ -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="Home" style="animation: lina-fade-up 0.5s ease both;">
+      <section style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 44px 0 8px;">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: oklch(0.94 0.03 200); color: oklch(0.4 0.09 200); padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; letter-spacing: 0.3px;">
+          Servicio a domicilio
+        </div>
+        <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: clamp(34px, 6vw, 56px); line-height: 1.08; margin: 18px 0 16px; max-width: 14ch;">
+          Tapetes, colchones y salas <em style="font-style: italic; color: oklch(0.47 0.09 200);">como nuevos</em>, sin salir de casa
+        </h1>
+        <p style="font-size: 18px; line-height: 1.55; color: oklch(0.45 0.02 250); max-width: 46ch; margin: 0 0 26px;">
+          Lavado profundo y profesional para el hogar. Agenda en línea en minutos, nosotros llegamos con todo el equipo.
+        </p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 30px;">
+          <button onClick="{{ agendarNow }}" style="background: oklch(0.47 0.09 200); color: white; border: none; padding: 16px 26px; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer;">Agendar mi servicio</button>
+          <button onClick="{{ goServicios }}" style="background: none; color: oklch(0.22 0.02 250); border: 1px solid oklch(0.85 0.01 250); padding: 16px 26px; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer;">Ver servicios</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; color: oklch(0.4 0.02 250);">Garantía de satisfacción</div>
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; color: oklch(0.4 0.02 250);">Productos certificados</div>
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; color: oklch(0.4 0.02 250);">Personal capacitado</div>
+        </div>
+      </section>
+
+      <section style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 46px 0 10px;">
+        <div style="width: 100%; aspect-ratio: 16/7; border-radius: 20px; background: repeating-linear-gradient(115deg, oklch(0.93 0.02 200), oklch(0.93 0.02 200) 12px, oklch(0.9 0.02 200) 12px, oklch(0.9 0.02 200) 24px); display: flex; align-items: center; justify-content: center;">
+          <span style="font-family: monospace; font-size: 13px; color: oklch(0.4 0.02 200); background: oklch(0.99 0.004 85 / 0.85); padding: 6px 14px; border-radius: 999px;">foto: equipo trabajando en sala de cliente</span>
+        </div>
+      </section>
+
+      <section style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 54px 0 10px;">
+        <h2 style="font-family: 'Newsreader', serif; font-size: clamp(26px, 4vw, 34px); font-weight: 500; margin: 0 0 22px;">Nuestros servicios</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+          <sc-for list="{{ services }}" as="svc" hint-placeholder-count="3">
+            <div onClick="{{ svc.onStart }}" style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 18px; padding: 26px 22px; cursor: pointer; display: flex; flex-direction: column; gap: 10px;">
+              <div style="width: 46px; height: 46px; border-radius: 999px; background: oklch(0.94 0.03 200); color: oklch(0.4 0.09 200); display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', serif; font-size: 20px; font-weight: 600;">{{ svc.letter }}</div>
+              <div style="font-size: 18px; font-weight: 700;">{{ svc.name }}</div>
+              <div style="font-size: 14px; color: oklch(0.48 0.02 250); line-height: 1.45;">{{ svc.short }}</div>
+              <div style="margin-top: 6px; font-size: 14px; font-weight: 700; color: oklch(0.47 0.09 200);">Desde {{ svc.fromLabel }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 54px 0 10px;">
+        <h2 style="font-family: 'Newsreader', serif; font-size: clamp(26px, 4vw, 34px); font-weight: 500; margin: 0 0 22px;">Cómo funciona</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: oklch(0.22 0.02 250); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Newsreader', serif;">1</div>
+            <div style="font-size: 17px; font-weight: 700;">Agenda en línea</div>
+            <div style="font-size: 14px; color: oklch(0.48 0.02 250); line-height: 1.5;">Elige el servicio, tamaño, fecha y hora que mejor te acomoden.</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: oklch(0.22 0.02 250); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Newsreader', serif;">2</div>
+            <div style="font-size: 17px; font-weight: 700;">Vamos a tu domicilio</div>
+            <div style="font-size: 14px; color: oklch(0.48 0.02 250); line-height: 1.5;">Llegamos con equipo profesional a la hora acordada.</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: oklch(0.22 0.02 250); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-family: 'Newsreader', serif;">3</div>
+            <div style="font-size: 17px; font-weight: 700;">Recibe todo limpio</div>
+            <div style="font-size: 14px; color: oklch(0.48 0.02 250); line-height: 1.5;">Tus tapetes, colchones o salas listos y frescos, sin moverte de casa.</div>
+          </div>
+        </div>
+      </section>
+
+      <section style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 54px 0 10px;">
+        <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 20px; padding: 30px 26px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 44px; height: 44px; border-radius: 999px; background: oklch(0.95 0.03 80); flex-shrink: 0;"></div>
+            <div>
+              <div style="font-family: 'Newsreader', serif; font-style: italic; font-size: 19px; line-height: 1.5; color: oklch(0.3 0.02 250);">"Llegaron puntuales, se llevaron el tapete grande y lo regresaron el mismo día impecable."</div>
+              <div style="margin-top: 8px; font-size: 13px; font-weight: 700; color: oklch(0.48 0.02 250);">Cliente de Lina</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="padding: 60px 0 70px; background: oklch(0.22 0.02 250); margin-top: 54px;">
+        <div style="max-width: min(1100px, 94vw); margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px;">
+          <h2 style="font-family: 'Newsreader', serif; color: white; font-size: clamp(26px, 4vw, 36px); font-weight: 500; margin: 0; max-width: 18ch;">¿Listo para que tus tapetes vuelvan a lucir así?</h2>
+          <button onClick="{{ agendarNow }}" style="background: oklch(0.72 0.09 80); color: oklch(0.2 0.05 80); border: none; padding: 16px 30px; border-radius: 14px; font-weight: 800; font-size: 16px; cursor: pointer;">Agendar ahora</button>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+
+  <!-- ============ SERVICIOS ============ -->
+  <sc-if value="{{ isServicios }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Servicios" style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 44px 0 70px; animation: lina-fade-up 0.5s ease both;">
+      <div style="font-size: 13px; font-weight: 700; color: oklch(0.47 0.09 200); letter-spacing: 0.3px; text-transform: uppercase;">Servicios</div>
+      <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: clamp(30px, 5vw, 42px); margin: 10px 0 34px;">Lavado profesional, a domicilio</h1>
+
+      <div style="display: flex; flex-direction: column; gap: 22px;">
+        <sc-for list="{{ services }}" as="svc" hint-placeholder-count="3">
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 20px; padding: 28px 24px; display: flex; flex-direction: column; gap: 18px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 50px; height: 50px; border-radius: 999px; background: oklch(0.94 0.03 200); color: oklch(0.4 0.09 200); display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', serif; font-size: 22px; font-weight: 600; flex-shrink: 0;">{{ svc.letter }}</div>
+              <div>
+                <div style="font-size: 20px; font-weight: 700;">{{ svc.name }}</div>
+                <div style="font-size: 14px; color: oklch(0.48 0.02 250);">{{ svc.short }}</div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+              <sc-for list="{{ svc.sizes }}" as="sz" hint-placeholder-count="3">
+                <div style="border: 1px solid oklch(0.91 0.01 250); border-radius: 12px; padding: 14px; background: oklch(0.99 0.004 85);">
+                  <div style="font-size: 14px; font-weight: 700;">{{ sz.label }}</div>
+                  <div style="font-size: 12px; color: oklch(0.5 0.02 250); margin: 2px 0 8px;">{{ sz.desc }}</div>
+                  <div style="font-size: 16px; font-weight: 800; color: oklch(0.47 0.09 200);">{{ sz.priceLabel }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ svc.workshopNote }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 13px; color: oklch(0.5 0.02 250); background: oklch(0.95 0.03 80); padding: 10px 14px; border-radius: 10px;">{{ svc.workshopNote }}</div>
+            </sc-if>
+            <button onClick="{{ svc.onStart }}" style="align-self: flex-start; background: oklch(0.47 0.09 200); color: white; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer;">Agendar este servicio</button>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin-top: 26px; background: oklch(0.94 0.03 200); border-radius: 16px; padding: 20px 22px; font-size: 14px; color: oklch(0.35 0.06 200); line-height: 1.5;">
+        Todos los servicios incluyen recolección y entrega a domicilio. Algunos tapetes de gran formato se lavan en nuestro centro de trabajo para un mejor resultado.
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ NOSOTROS ============ -->
+  <sc-if value="{{ isNosotros }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Nosotros" style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 44px 0 70px; animation: lina-fade-up 0.5s ease both;">
+      <div style="font-size: 13px; font-weight: 700; color: oklch(0.47 0.09 200); letter-spacing: 0.3px; text-transform: uppercase;">Nosotros</div>
+      <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: clamp(30px, 5vw, 42px); margin: 10px 0 20px; max-width: 16ch;">Cuidamos tu hogar como si fuera el nuestro</h1>
+      <p style="font-size: 17px; line-height: 1.6; color: oklch(0.42 0.02 250); max-width: 60ch; margin: 0 0 34px;">
+        Lina nació para resolver algo simple: llevar un lavado profundo y profesional hasta la puerta de tu casa, sin que tengas que cargar nada ni preocuparte por el proceso.
+      </p>
+
+      <div style="width: 100%; aspect-ratio: 16/8; border-radius: 20px; background: repeating-linear-gradient(115deg, oklch(0.93 0.02 200), oklch(0.93 0.02 200) 12px, oklch(0.9 0.02 200) 12px, oklch(0.9 0.02 200) 24px); display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+        <span style="font-family: monospace; font-size: 13px; color: oklch(0.4 0.02 200); background: oklch(0.99 0.004 85 / 0.85); padding: 6px 14px; border-radius: 999px;">foto: equipo Lina</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 46px;">
+        <div>
+          <div style="font-family: 'Newsreader', serif; font-size: 22px; font-weight: 600; margin-bottom: 8px;">Confianza</div>
+          <div style="font-size: 14px; color: oklch(0.48 0.02 250); line-height: 1.55;">Personal capacitado e identificado en cada visita a tu domicilio.</div>
+        </div>
+        <div>
+          <div style="font-family: 'Newsreader', serif; font-size: 22px; font-weight: 600; margin-bottom: 8px;">Cuidado</div>
+          <div style="font-size: 14px; color: oklch(0.48 0.02 250); line-height: 1.55;">Productos certificados, seguros para niños, mascotas y materiales delicados.</div>
+        </div>
+        <div>
+          <div style="font-family: 'Newsreader', serif; font-size: 22px; font-weight: 600; margin-bottom: 8px;">Comodidad</div>
+          <div style="font-size: 14px; color: oklch(0.48 0.02 250); line-height: 1.55;">Agenda, paga y da seguimiento a tu servicio desde el celular.</div>
+        </div>
+      </div>
+
+      <button onClick="{{ agendarNow }}" style="background: oklch(0.47 0.09 200); color: white; border: none; padding: 16px 26px; border-radius: 14px; font-weight: 700; font-size: 16px; cursor: pointer;">Agendar mi servicio</button>
+    </div>
+  </sc-if>
+
+  <!-- ============ CONTACTO ============ -->
+  <sc-if value="{{ isContacto }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Contacto" style="max-width: min(1100px, 94vw); margin: 0 auto; padding: 44px 0 70px; animation: lina-fade-up 0.5s ease both;">
+      <div style="font-size: 13px; font-weight: 700; color: oklch(0.47 0.09 200); letter-spacing: 0.3px; text-transform: uppercase;">Contacto</div>
+      <h1 style="font-family: 'Newsreader', serif; font-weight: 500; font-size: clamp(30px, 5vw, 42px); margin: 10px 0 30px;">Hablemos</h1>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 16px; padding: 18px 20px;">
+            <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: oklch(0.5 0.02 250);">WhatsApp / Teléfono</div>
+            <div style="font-size: 17px; font-weight: 700; margin-top: 4px;">+52 55 0000 0000</div>
+          </div>
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 16px; padding: 18px 20px;">
+            <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: oklch(0.5 0.02 250);">Correo</div>
+            <div style="font-size: 17px; font-weight: 700; margin-top: 4px;">hola@lina.mx</div>
+          </div>
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 16px; padding: 18px 20px;">
+            <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: oklch(0.5 0.02 250);">Horario</div>
+            <div style="font-size: 17px; font-weight: 700; margin-top: 4px;">Lun a sáb, 9:00–19:00</div>
+          </div>
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 16px; padding: 18px 20px;">
+            <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: oklch(0.5 0.02 250);">Zona de cobertura</div>
+            <div style="font-size: 17px; font-weight: 700; margin-top: 4px;">Zona metropolitana</div>
+          </div>
+        </div>
+
+        <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 20px; padding: 26px;">
+          <sc-if value="{{ contactSubmitted }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 30px 0; animation: lina-pop 0.4s ease both;">
+              <div style="width: 54px; height: 54px; border-radius: 999px; background: oklch(0.94 0.03 200); display: flex; align-items: center; justify-content: center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke="oklch(0.4 0.09 200)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div style="font-size: 17px; font-weight: 700;">¡Mensaje enviado!</div>
+              <div style="font-size: 14px; color: oklch(0.48 0.02 250);">Te responderemos muy pronto.</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ showContactForm }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div>
+                <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Nombre</label>
+                <input value="{{ contactForm.name }}" onChange="{{ setContactName }}" placeholder="Tu nombre" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+              </div>
+              <div>
+                <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Teléfono</label>
+                <input value="{{ contactForm.phone }}" onChange="{{ setContactPhone }}" placeholder="10 dígitos" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+              </div>
+              <div>
+                <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Mensaje</label>
+                <textarea value="{{ contactForm.message }}" onChange="{{ setContactMessage }}" placeholder="¿En qué te ayudamos?" rows="4" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px; resize: vertical;"></textarea>
+              </div>
+              <button onClick="{{ submitContact }}" disabled="{{ cannotSubmitContact }}" style="background: {{ contactBg }}; color: white; border: none; padding: 14px 22px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: {{ contactCursor }};">Enviar mensaje</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ AGENDAR (WIZARD) ============ -->
+  <sc-if value="{{ isAgendar }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Agendar" style="max-width: min(560px, 94vw); margin: 0 auto; padding: 30px 0 120px; animation: lina-fade-up 0.4s ease both;">
+
+      <sc-if value="{{ showWizard }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="font-size: 13px; font-weight: 700; color: oklch(0.48 0.02 250);">Paso {{ step }} de 5</div>
+            <div style="font-size: 13px; font-weight: 700; color: oklch(0.47 0.09 200);">{{ stepTitle }}</div>
+          </div>
+          <div style="height: 6px; background: oklch(0.92 0.01 250); border-radius: 999px; overflow: hidden; margin-bottom: 26px;">
+            <div style="height: 100%; border-radius: 999px; background: oklch(0.47 0.09 200); width: {{ progressPercent }}%; transition: width 0.35s ease;"></div>
+          </div>
+
+          <!-- STEP 1: SERVICIO -->
+          <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <h2 style="font-family: 'Newsreader', serif; font-size: 24px; font-weight: 500; margin: 0 0 6px;">¿Qué necesitas lavar?</h2>
+              <sc-for list="{{ services }}" as="svc" hint-placeholder-count="3">
+                <div onClick="{{ svc.onSelect }}" style="cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 14px; background: {{ svc.bg }}; border: 1.5px solid {{ svc.border }};">
+                  <div style="width: 44px; height: 44px; border-radius: 999px; background: white; color: oklch(0.4 0.09 200); display: flex; align-items: center; justify-content: center; font-family: 'Newsreader', serif; font-size: 19px; font-weight: 600; flex-shrink: 0;">{{ svc.letter }}</div>
+                  <div style="flex: 1;">
+                    <div style="font-size: 16px; font-weight: 700;">{{ svc.name }}</div>
+                    <div style="font-size: 13px; color: oklch(0.5 0.02 250);">Desde {{ svc.fromLabel }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- STEP 2: DETALLES -->
+          <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <h2 style="font-family: 'Newsreader', serif; font-size: 24px; font-weight: 500; margin: 0 0 6px;">Detalles de {{ selectedServiceName }}</h2>
+              <div style="font-size: 14px; font-weight: 700;">Tamaño</div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ currentSizes }}" as="sz" hint-placeholder-count="3">
+                  <div onClick="{{ sz.onSelect }}" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 12px; background: {{ sz.bg }}; border: 1.5px solid {{ sz.border }};">
+                    <div>
+                      <div style="font-size: 15px; font-weight: 700;">{{ sz.label }}</div>
+                      <div style="font-size: 13px; color: oklch(0.5 0.02 250);">{{ sz.desc }}</div>
+                    </div>
+                    <div style="font-size: 15px; font-weight: 800; color: oklch(0.47 0.09 200);">{{ sz.priceLabel }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ showWorkshopNote }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size: 13px; color: oklch(0.35 0.06 200); background: oklch(0.95 0.03 80); padding: 12px 14px; border-radius: 10px;">Este tamaño se recoge y lava en nuestro centro de trabajo, y se entrega de vuelta a tu domicilio.</div>
+              </sc-if>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
+                <div style="font-size: 14px; font-weight: 700;">Cantidad</div>
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <button onClick="{{ decQty }}" style="width: 36px; height: 36px; border-radius: 999px; border: 1px solid oklch(0.85 0.01 250); background: white; font-size: 18px; font-weight: 700; cursor: pointer;">−</button>
+                  <div style="font-size: 17px; font-weight: 700; min-width: 20px; text-align: center;">{{ qty }}</div>
+                  <button onClick="{{ incQty }}" style="width: 36px; height: 36px; border-radius: 999px; border: 1px solid oklch(0.85 0.01 250); background: white; font-size: 18px; font-weight: 700; cursor: pointer;">+</button>
+                </div>
+              </div>
+              <sc-if value="{{ hasSelectedSize }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid oklch(0.91 0.01 250);">
+                  <div style="font-size: 15px; font-weight: 700;">Subtotal</div>
+                  <div style="font-size: 20px; font-weight: 800; color: oklch(0.47 0.09 200);">{{ subtotalLabel }}</div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- STEP 3: FECHA Y HORA -->
+          <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 18px;">
+              <h2 style="font-family: 'Newsreader', serif; font-size: 24px; font-weight: 500; margin: 0 0 6px;">Elige fecha y hora</h2>
+              <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px;">
+                <sc-for list="{{ dateOptions }}" as="d" hint-placeholder-count="7">
+                  <div onClick="{{ d.onSelect }}" style="cursor: pointer; flex-shrink: 0; width: 60px; padding: 12px 0; border-radius: 14px; text-align: center; background: {{ d.bg }}; border: 1.5px solid {{ d.border }}; color: {{ d.color }};">
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; opacity: 0.8;">{{ d.weekday }}</div>
+                    <div style="font-size: 18px; font-weight: 800; margin-top: 2px;">{{ d.dayNum }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ selectedDate }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Horario disponible</div>
+                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <sc-for list="{{ timeOptions }}" as="t" hint-placeholder-count="4">
+                      <div onClick="{{ t.onSelect }}" style="cursor: pointer; text-align: center; padding: 13px 8px; border-radius: 12px; font-size: 14px; font-weight: 700; background: {{ t.bg }}; border: 1.5px solid {{ t.border }}; color: {{ t.color }};">{{ t.value }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <!-- STEP 4: DIRECCION -->
+          <sc-if value="{{ isStep4 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <h2 style="font-family: 'Newsreader', serif; font-size: 24px; font-weight: 500; margin: 0 0 6px;">Dirección del servicio</h2>
+              <div>
+                <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Calle y número</label>
+                <input value="{{ address.street }}" onChange="{{ setStreet }}" placeholder="Ej. Av. Reforma 123" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                  <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Colonia</label>
+                  <input value="{{ address.colonia }}" onChange="{{ setColonia }}" placeholder="Colonia" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+                </div>
+                <div>
+                  <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Ciudad</label>
+                  <input value="{{ address.ciudad }}" onChange="{{ setCiudad }}" placeholder="Ciudad" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+                </div>
+              </div>
+              <div>
+                <label style="font-size: 13px; font-weight: 700; display: block; margin-bottom: 6px;">Referencias (opcional)</label>
+                <textarea value="{{ address.referencias }}" onChange="{{ setReferencias }}" placeholder="Color de fachada, entre calles, etc." rows="3" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px; resize: vertical;"></textarea>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- STEP 5: PAGO -->
+          <sc-if value="{{ isStep5 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 18px;">
+              <h2 style="font-family: 'Newsreader', serif; font-size: 24px; font-weight: 500; margin: 0 0 6px;">Resumen y pago</h2>
+
+              <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: oklch(0.5 0.02 250);">Servicio</span><span style="font-weight: 700;">{{ selectedServiceName }} · {{ selectedSizeLabel }}</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: oklch(0.5 0.02 250);">Cantidad</span><span style="font-weight: 700;">{{ qty }}</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: oklch(0.5 0.02 250);">Fecha</span><span style="font-weight: 700;">{{ selectedDateLabel }}, {{ selectedTime }}</span></div>
+                <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: oklch(0.5 0.02 250);">Dirección</span><span style="font-weight: 700; text-align: right; max-width: 60%;">{{ address.street }}, {{ address.colonia }}</span></div>
+                <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid oklch(0.91 0.01 250); font-size: 16px;"><span style="font-weight: 700;">Total</span><span style="font-weight: 800; color: oklch(0.47 0.09 200);">{{ subtotalLabel }}</span></div>
+              </div>
+
+              <div>
+                <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px;">Forma de pago</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div onClick="{{ selectDeposit }}" style="cursor: pointer; padding: 14px 14px; border-radius: 12px; background: {{ depositBg }}; border: 1.5px solid {{ depositBorder }};">
+                    <div style="font-size: 14px; font-weight: 700;">Depósito ({{ depositPercentLabel }}%)</div>
+                    <div style="font-size: 12px; color: oklch(0.5 0.02 250); margin-top: 2px;">Resto al terminar</div>
+                    <div style="font-size: 17px; font-weight: 800; color: oklch(0.47 0.09 200); margin-top: 8px;">{{ depositLabel }}</div>
+                  </div>
+                  <div onClick="{{ selectFull }}" style="cursor: pointer; padding: 14px 14px; border-radius: 12px; background: {{ fullBg }}; border: 1.5px solid {{ fullBorder }};">
+                    <div style="font-size: 14px; font-weight: 700;">Pago completo</div>
+                    <div style="font-size: 12px; color: oklch(0.5 0.02 250); margin-top: 2px;">Todo por adelantado</div>
+                    <div style="font-size: 17px; font-weight: 800; color: oklch(0.47 0.09 200); margin-top: 8px;">{{ subtotalLabel }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="font-size: 14px; font-weight: 700;">Datos de tarjeta</div>
+                <input value="{{ card.number }}" onChange="{{ setCardNumber }}" placeholder="Número de tarjeta" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <input value="{{ card.exp }}" onChange="{{ setCardExp }}" placeholder="MM/AA" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+                  <input value="{{ card.cvc }}" onChange="{{ setCardCvc }}" placeholder="CVC" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+                </div>
+                <input value="{{ card.name }}" onChange="{{ setCardName }}" placeholder="Nombre en la tarjeta" style="width: 100%; padding: 13px 14px; border-radius: 10px; border: 1px solid oklch(0.85 0.01 250); font-size: 15px;" />
+              </div>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- fixed bottom nav -->
+        <div style="position: fixed; bottom: 0; left: 0; right: 0; background: oklch(0.99 0.004 85 / 0.95); backdrop-filter: blur(10px); border-top: 1px solid oklch(0.91 0.01 250); padding: 14px min(3vw, 20px); z-index: 30;">
+          <div style="max-width: 560px; margin: 0 auto; display: flex; gap: 12px;">
+            <sc-if value="{{ canGoBack }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ prevStep }}" style="background: none; border: 1px solid oklch(0.85 0.01 250); padding: 15px 22px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer;">Atrás</button>
+            </sc-if>
+            <button onClick="{{ nextStep }}" disabled="{{ cannotContinue }}" style="flex: 1; background: {{ continueBg }}; color: white; border: none; padding: 15px 22px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: {{ continueCursor }};">{{ mainButtonLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- CONFIRMATION -->
+      <sc-if value="{{ confirmed }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 40px 10px; animation: lina-pop 0.45s ease both;">
+          <div style="width: 68px; height: 68px; border-radius: 999px; background: oklch(0.94 0.03 200); display: flex; align-items: center; justify-content: center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke="oklch(0.4 0.09 200)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h2 style="font-family: 'Newsreader', serif; font-size: 26px; font-weight: 500; margin: 0;">¡Servicio agendado!</h2>
+          <p style="font-size: 15px; color: oklch(0.48 0.02 250); max-width: 34ch; margin: 0;">Te esperamos el {{ selectedDateLabel }} de {{ selectedTime }}. Te enviaremos un recordatorio antes de la visita.</p>
+          <div style="background: white; border: 1px solid oklch(0.91 0.01 250); border-radius: 14px; padding: 16px 22px; font-size: 14px; font-weight: 700; color: oklch(0.4 0.02 250); margin-top: 8px;">Folio: {{ bookingId }}</div>
+          <button onClick="{{ backToHome }}" style="margin-top: 14px; background: oklch(0.22 0.02 250); color: white; border: none; padding: 15px 26px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer;">Volver al inicio</button>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  </main>
+
+  <!-- FOOTER -->
+  <sc-if value="{{ showFooter }}" hint-placeholder-val="{{ true }}">
+    <footer style="border-top: 1px solid oklch(0.91 0.01 250); padding: 40px 0 100px; background: white;">
+      <div style="max-width: min(1100px, 94vw); margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <div style="width: 8px; height: 8px; border-radius: 999px; background: oklch(0.72 0.09 80);"></div>
+            <span style="font-family: 'Newsreader', serif; font-size: 20px; font-weight: 600;">Lina</span>
+          </div>
+          <div style="font-size: 13px; color: oklch(0.5 0.02 250);">Lavado profesional a domicilio</div>
+        </div>
+        <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onClick="{{ goServicios }}" style="background: none; border: none; text-align: left; padding: 0; font-size: 14px; font-weight: 600; color: oklch(0.4 0.02 250); cursor: pointer;">Servicios</button>
+            <button onClick="{{ goNosotros }}" style="background: none; border: none; text-align: left; padding: 0; font-size: 14px; font-weight: 600; color: oklch(0.4 0.02 250); cursor: pointer;">Nosotros</button>
+            <button onClick="{{ goContacto }}" style="background: none; border: none; text-align: left; padding: 0; font-size: 14px; font-weight: 600; color: oklch(0.4 0.02 250); cursor: pointer;">Contacto</button>
+          </div>
+          <div style="font-size: 13px; color: oklch(0.5 0.02 250); line-height: 1.8;">+52 55 0000 0000<br/>hola@lina.mx</div>
+        </div>
+      </div>
+    </footer>
+  </sc-if>
+
+  <!-- FAB -->
+  <sc-if value="{{ showFab }}" hint-placeholder-val="{{ false }}">
+    <button onClick="{{ agendarNow }}" style="position: fixed; bottom: 20px; right: 20px; z-index: 35; background: oklch(0.47 0.09 200); color: white; border: none; padding: 15px 22px; border-radius: 999px; font-weight: 700; font-size: 14px; box-shadow: 0 8px 24px oklch(0.4 0.09 200 / 0.35); cursor: pointer;">Agendar</button>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 420, &quot;height&quot;: 900},
+  &quot;depositPercent&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 30, &quot;min&quot;: 10, &quot;max&quot;: 50, &quot;step&quot;: 5, &quot;unit&quot;: &quot;%&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Reservación&quot;},
+  &quot;defaultPaymentType&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;deposit&quot;, &quot;options&quot;: [&quot;deposit&quot;, &quot;full&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Reservación&quot;},
+  &quot;allowWorkshopDropoff&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Reservación&quot;}
+}">
+class Component extends DCLogic {
+  state = {
+    route: 'home',
+    menuOpen: false,
+    step: 1,
+    serviceId: null,
+    sizeId: null,
+    qty: 1,
+    selectedDate: null,
+    selectedTime: null,
+    address: { street: '', colonia: '', ciudad: '', referencias: '' },
+    paymentType: null,
+    card: { number: '', exp: '', cvc: '', name: '' },
+    confirmed: false,
+    bookingId: null,
+    contactForm: { name: '', phone: '', message: '' },
+    contactSubmitted: false,
+    today: new Date(),
+  };
+
+  SERVICES_DATA = [
+    {
+      id: 'tapetes', name: 'Tapetes y alfombras', letter: 'T',
+      short: 'Lavado profundo que renueva fibras y color.',
+      sizes: [
+        { id: 'chico', label: 'Chico', desc: 'hasta 1.5 m²', price: 250 },
+        { id: 'mediano', label: 'Mediano', desc: '1.5 a 4 m²', price: 400 },
+        { id: 'grande', label: 'Grande', desc: 'más de 4 m²', price: 650, workshop: true },
+      ],
+      workshopNote: 'Los tapetes grandes se recogen y lavan en nuestro centro de trabajo.',
+    },
+    {
+      id: 'colchones', name: 'Colchones', letter: 'C',
+      short: 'Elimina ácaros, manchas y malos olores.',
+      sizes: [
+        { id: 'individual', label: 'Individual', desc: '1 plaza', price: 350 },
+        { id: 'matrimonial', label: 'Matrimonial', desc: '2 plazas', price: 450 },
+        { id: 'king', label: 'King / Queen', desc: 'extra grande', price: 550 },
+      ],
+    },
+    {
+      id: 'salas', name: 'Salas y sillones', letter: 'S',
+      short: 'Tapicería como nueva, sin desmontar nada.',
+      sizes: [
+        { id: '2plazas', label: '2 plazas', desc: 'sofá pequeño', price: 500 },
+        { id: '3plazas', label: '3 plazas', desc: 'sofá grande', price: 650 },
+        { id: 'seccional', label: 'Seccional', desc: 'sala completa', price: 900 },
+      ],
+    },
+  ];
+
+  WEEKDAYS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  TIME_SLOTS = ['9:00 - 11:00', '11:00 - 13:00', '13:00 - 15:00', '15:00 - 17:00', '17:00 - 19:00'];
+  STEP_TITLES = { 1: 'Servicio', 2: 'Detalles', 3: 'Fecha y hora', 4: 'Dirección', 5: 'Pago' };
+
+  money(n) {
+    return '$' + n.toLocaleString('es-MX');
+  }
+
+  findService(id) {
+    return this.SERVICES_DATA.find(s => s.id === id) || null;
+  }
+
+  go(route) {
+    this.setState({ route, menuOpen: false });
+  }
+
+  toggleMenu() {
+    this.setState(s => ({ menuOpen: !s.menuOpen }));
+  }
+
+  agendarNow() {
+    this.setState({ route: 'agendar', menuOpen: false, step: 1 });
+  }
+
+  startBookingWithService(id) {
+    this.setState({ route: 'agendar', menuOpen: false, step: 2, serviceId: id, sizeId: null, qty: 1, confirmed: false });
+  }
+
+  selectService(id) {
+    this.setState({ serviceId: id, sizeId: null });
+  }
+
+  selectSize(id) {
+    this.setState({ sizeId: id });
+  }
+
+  incQty() {
+    this.setState(s => ({ qty: Math.min(10, s.qty + 1) }));
+  }
+  decQty() {
+    this.setState(s => ({ qty: Math.max(1, s.qty - 1) }));
+  }
+
+  selectDate(key) {
+    this.setState({ selectedDate: key, selectedTime: null });
+  }
+  selectTime(t) {
+    this.setState({ selectedTime: t });
+  }
+
+  setStreet(e) { const v = e.target.value; this.setState(s => ({ address: { ...s.address, street: v } })); }
+  setColonia(e) { const v = e.target.value; this.setState(s => ({ address: { ...s.address, colonia: v } })); }
+  setCiudad(e) { const v = e.target.value; this.setState(s => ({ address: { ...s.address, ciudad: v } })); }
+  setReferencias(e) { const v = e.target.value; this.setState(s => ({ address: { ...s.address, referencias: v } })); }
+
+  setPaymentType(t) { this.setState({ paymentType: t }); }
+
+  setCardNumber(e) { const v = e.target.value; this.setState(s => ({ card: { ...s.card, number: v } })); }
+  setCardExp(e) { const v = e.target.value; this.setState(s => ({ card: { ...s.card, exp: v } })); }
+  setCardCvc(e) { const v = e.target.value; this.setState(s => ({ card: { ...s.card, cvc: v } })); }
+  setCardName(e) { const v = e.target.value; this.setState(s => ({ card: { ...s.card, name: v } })); }
+
+  setContactName(e) { const v = e.target.value; this.setState(s => ({ contactForm: { ...s.contactForm, name: v } })); }
+  setContactPhone(e) { const v = e.target.value; this.setState(s => ({ contactForm: { ...s.contactForm, phone: v } })); }
+  setContactMessage(e) { const v = e.target.value; this.setState(s => ({ contactForm: { ...s.contactForm, message: v } })); }
+
+  submitContact() {
+    this.setState({ contactSubmitted: true });
+  }
+
+  prevStep() {
+    this.setState(s => ({ step: Math.max(1, s.step - 1) }));
+  }
+
+  nextStep() {
+    const s = this.state;
+    if (s.step < 5) {
+      this.setState({ step: s.step + 1 });
+    } else {
+      const id = 'LN-' + Math.floor(100000 + Math.random() * 900000);
+      this.setState({ confirmed: true, bookingId: id });
+    }
+  }
+
+  backToHome() {
+    this.setState({
+      route: 'home', step: 1, serviceId: null, sizeId: null, qty: 1,
+      selectedDate: null, selectedTime: null,
+      address: { street: '', colonia: '', ciudad: '', referencias: '' },
+      paymentType: null, card: { number: '', exp: '', cvc: '', name: '' },
+      confirmed: false, bookingId: null,
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const depositPercent = this.props.depositPercent ?? 30;
+    const allowWorkshopDropoff = this.props.allowWorkshopDropoff ?? true;
+    const defaultPaymentType = this.props.defaultPaymentType ?? 'deposit';
+    const paymentType = s.paymentType || defaultPaymentType;
+
+    const services = this.SERVICES_DATA.map(svc => {
+      const isSelected = s.serviceId === svc.id;
+      return {
+        id: svc.id,
+        name: svc.name,
+        letter: svc.letter,
+        short: svc.short,
+        fromLabel: this.money(Math.min(...svc.sizes.map(z => z.price))),
+        isSelected,
+        bg: isSelected ? 'oklch(0.94 0.03 200)' : 'white',
+        border: isSelected ? 'oklch(0.47 0.09 200)' : 'oklch(0.91 0.01 250)',
+        workshopNote: svc.workshopNote || null,
+        onStart: () => this.startBookingWithService(svc.id),
+        onSelect: () => this.selectService(svc.id),
+        sizes: svc.sizes.map(z => ({
+          id: z.id, label: z.label, desc: z.desc,
+          price: z.price, priceLabel: this.money(z.price),
+          workshop: !!z.workshop,
+        })),
+      };
+    });
+
+    const selectedService = this.findService(s.serviceId);
+    const currentSizes = selectedService ? selectedService.sizes.map(z => {
+      const isSelected = s.sizeId === z.id;
+      return {
+        id: z.id, label: z.label, desc: z.desc,
+        priceLabel: this.money(z.price), isSelected,
+        bg: isSelected ? 'oklch(0.94 0.03 200)' : 'white',
+        border: isSelected ? 'oklch(0.47 0.09 200)' : 'oklch(0.91 0.01 250)',
+        onSelect: () => this.selectSize(z.id),
+      };
+    }) : [];
+
+    const selectedSizeObj = selectedService ? selectedService.sizes.find(z => z.id === s.sizeId) : null;
+    const unitPrice = selectedSizeObj ? selectedSizeObj.price : 0;
+    const subtotal = unitPrice * s.qty;
+    const depositAmount = Math.round(subtotal * (depositPercent / 100));
+
+    const showWorkshopNote = !!(selectedSizeObj && selectedSizeObj.workshop && allowWorkshopDropoff);
+
+    // dates: next 14 days
+    const dateOptions = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(s.today);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      const isSelected = s.selectedDate === key;
+      dateOptions.push({
+        key, weekday: this.WEEKDAYS[d.getDay()], dayNum: d.getDate(),
+        month: this.MONTHS[d.getMonth()], isSelected,
+        bg: isSelected ? 'oklch(0.47 0.09 200)' : 'white',
+        border: isSelected ? 'oklch(0.47 0.09 200)' : 'oklch(0.91 0.01 250)',
+        color: isSelected ? 'white' : 'oklch(0.22 0.02 250)',
+        onSelect: () => this.selectDate(key),
+      });
+    }
+    const selectedDateObj = dateOptions.find(d => d.key === s.selectedDate);
+    const selectedDateLabel = selectedDateObj ? `${selectedDateObj.weekday} ${selectedDateObj.dayNum} ${selectedDateObj.month}` : '';
+
+    const timeOptions = this.TIME_SLOTS.map(v => {
+      const isSelected = s.selectedTime === v;
+      return {
+        value: v, isSelected,
+        bg: isSelected ? 'oklch(0.94 0.03 200)' : 'white',
+        border: isSelected ? 'oklch(0.47 0.09 200)' : 'oklch(0.91 0.01 250)',
+        color: isSelected ? 'oklch(0.4 0.09 200)' : 'oklch(0.22 0.02 250)',
+        onSelect: () => this.selectTime(v),
+      };
+    });
+
+    const addressValid = s.address.street.trim().length > 2 && s.address.colonia.trim().length > 1 && s.address.ciudad.trim().length > 1;
+    const cardValid = s.card.number.trim().length >= 12 && s.card.exp.trim().length >= 4 && s.card.cvc.trim().length >= 3 && s.card.name.trim().length > 2;
+
+    let canContinue = false;
+    if (s.step === 1) canContinue = !!s.serviceId;
+    else if (s.step === 2) canContinue = !!s.sizeId;
+    else if (s.step === 3) canContinue = !!s.selectedDate && !!s.selectedTime;
+    else if (s.step === 4) canContinue = addressValid;
+    else if (s.step === 5) canContinue = cardValid;
+
+    const contactValid = s.contactForm.name.trim().length > 1 && s.contactForm.phone.trim().length >= 8;
+
+    const isDepositSelected = paymentType === 'deposit';
+    const isFullSelected = paymentType === 'full';
+
+    return {
+      route: s.route,
+      isHome: s.route === 'home',
+      isServicios: s.route === 'servicios',
+      isNosotros: s.route === 'nosotros',
+      isContacto: s.route === 'contacto',
+      isAgendar: s.route === 'agendar',
+      showFab: s.route !== 'agendar' && !s.menuOpen,
+      showFooter: s.route !== 'agendar',
+      menuOpen: s.menuOpen,
+      toggleMenu: () => this.toggleMenu(),
+      go: (r) => this.go(r),
+      goHome: () => this.go('home'),
+      goServicios: () => this.go('servicios'),
+      goNosotros: () => this.go('nosotros'),
+      goContacto: () => this.go('contacto'),
+      agendarNow: () => this.agendarNow(),
+      startBookingWithService: (id) => this.startBookingWithService(id),
+
+      services,
+      step: s.step,
+      isStep1: s.step === 1,
+      isStep2: s.step === 2,
+      isStep3: s.step === 3,
+      isStep4: s.step === 4,
+      isStep5: s.step === 5,
+      canGoBack: s.step > 1,
+      stepTitle: this.STEP_TITLES[s.step],
+      progressPercent: Math.round(((s.step - 1) / 4) * 100),
+      canContinue,
+      cannotContinue: !canContinue,
+      continueBg: canContinue ? 'oklch(0.47 0.09 200)' : 'oklch(0.85 0.01 250)',
+      continueCursor: canContinue ? 'pointer' : 'not-allowed',
+      mainButtonLabel: s.step === 5 ? `Confirmar y pagar ${this.money(paymentType === 'deposit' ? depositAmount : subtotal)}` : 'Continuar',
+      nextStep: () => this.nextStep(),
+      prevStep: () => this.prevStep(),
+      showWizard: !s.confirmed,
+
+      selectService: (id) => this.selectService(id),
+      selectedServiceName: selectedService ? selectedService.name : '',
+      currentSizes,
+      selectSize: (id) => this.selectSize(id),
+      selectedSizeLabel: selectedSizeObj ? selectedSizeObj.label : '',
+      showWorkshopNote,
+      hasSelectedSize: !!selectedSizeObj,
+      qty: s.qty,
+      incQty: () => this.incQty(),
+      decQty: () => this.decQty(),
+      subtotalLabel: this.money(subtotal),
+
+      dateOptions,
+      selectedDate: s.selectedDate,
+      selectedDateLabel,
+      selectDate: (k) => this.selectDate(k),
+      timeOptions,
+      selectedTime: s.selectedTime,
+      selectTime: (t) => this.selectTime(t),
+
+      address: s.address,
+      setStreet: (e) => this.setStreet(e),
+      setColonia: (e) => this.setColonia(e),
+      setCiudad: (e) => this.setCiudad(e),
+      setReferencias: (e) => this.setReferencias(e),
+
+      isDepositSelected,
+      isFullSelected,
+      depositBg: isDepositSelected ? 'oklch(0.94 0.03 200)' : 'white',
+      depositBorder: isDepositSelected ? 'oklch(0.47 0.09 200)' : 'oklch(0.91 0.01 250)',
+      fullBg: isFullSelected ? 'oklch(0.94 0.03 200)' : 'white',
+      fullBorder: isFullSelected ? 'oklch(0.47 0.09 200)' : 'oklch(0.91 0.01 250)',
+      setPaymentType: (t) => this.setPaymentType(t),
+      selectDeposit: () => this.setPaymentType('deposit'),
+      selectFull: () => this.setPaymentType('full'),
+      depositPercentLabel: depositPercent,
+      depositLabel: this.money(depositAmount),
+
+      card: s.card,
+      setCardNumber: (e) => this.setCardNumber(e),
+      setCardExp: (e) => this.setCardExp(e),
+      setCardCvc: (e) => this.setCardCvc(e),
+      setCardName: (e) => this.setCardName(e),
+
+      confirmed: s.confirmed,
+      bookingId: s.bookingId,
+      backToHome: () => this.backToHome(),
+
+      contactForm: s.contactForm,
+      setContactName: (e) => this.setContactName(e),
+      setContactPhone: (e) => this.setContactPhone(e),
+      setContactMessage: (e) => this.setContactMessage(e),
+      contactValid,
+      cannotSubmitContact: !contactValid,
+      contactBg: contactValid ? 'oklch(0.47 0.09 200)' : 'oklch(0.85 0.01 250)',
+      contactCursor: contactValid ? 'pointer' : 'not-allowed',
+      contactSubmitted: s.contactSubmitted,
+      showContactForm: !s.contactSubmitted,
+      submitContact: () => this.submitContact(),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

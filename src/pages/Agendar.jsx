@@ -1,0 +1,201 @@
+import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { findService } from '../data/services';
+import { getDateOptions } from '../utils/dates';
+import { money } from '../utils/money';
+import { wizardContainer } from '../styles';
+import { DEFAULT_PAYMENT_TYPE, DEPOSIT_PERCENT } from '../config';
+import ProgressBar from './agendar/ProgressBar';
+import StepService from './agendar/StepService';
+import StepDetails from './agendar/StepDetails';
+import StepDateTime from './agendar/StepDateTime';
+import StepAddress from './agendar/StepAddress';
+import StepPayment from './agendar/StepPayment';
+import Confirmation from './agendar/Confirmation';
+
+const EMPTY_ADDRESS = { street: '', colonia: '', ciudad: '', referencias: '' };
+const EMPTY_CARD = { number: '', exp: '', cvc: '', name: '' };
+
+export default function Agendar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const initialServiceId = location.state?.serviceId ?? null;
+
+  const [step, setStep] = useState(initialServiceId ? 2 : 1);
+  const [serviceId, setServiceId] = useState(initialServiceId);
+  const [sizeId, setSizeId] = useState(null);
+  const [qty, setQty] = useState(1);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [address, setAddress] = useState(EMPTY_ADDRESS);
+  const [paymentType, setPaymentType] = useState(null);
+  const [card, setCard] = useState(EMPTY_CARD);
+  const [confirmed, setConfirmed] = useState(false);
+  const [bookingId, setBookingId] = useState(null);
+
+  const dateOptions = useMemo(() => getDateOptions(), []);
+
+  const service = findService(serviceId);
+  const selectedSize = service ? service.sizes.find((z) => z.id === sizeId) : null;
+  const subtotal = selectedSize ? selectedSize.price * qty : 0;
+  const selectedDateObj = dateOptions.find((d) => d.key === selectedDate);
+  const selectedDateLabel = selectedDateObj ? `${selectedDateObj.weekday} ${selectedDateObj.dayNum} ${selectedDateObj.month}` : '';
+
+  const effectivePaymentType = paymentType || DEFAULT_PAYMENT_TYPE;
+
+  const addressValid = address.street.trim().length > 2 && address.colonia.trim().length > 1 && address.ciudad.trim().length > 1;
+  const cardValid = card.number.trim().length >= 12 && card.exp.trim().length >= 4 && card.cvc.trim().length >= 3 && card.name.trim().length > 2;
+
+  let canContinue = false;
+  if (step === 1) canContinue = !!serviceId;
+  else if (step === 2) canContinue = !!sizeId;
+  else if (step === 3) canContinue = !!selectedDate && !!selectedTime;
+  else if (step === 4) canContinue = addressValid;
+  else if (step === 5) canContinue = cardValid;
+
+  const depositAmount = Math.round(subtotal * (DEPOSIT_PERCENT / 100));
+  const mainButtonLabel = step === 5
+    ? `Confirmar y pagar ${money(effectivePaymentType === 'deposit' ? depositAmount : subtotal)}`
+    : 'Continuar';
+
+  const handleAddressChange = (field) => (e) => {
+    const value = e.target.value;
+    setAddress((a) => ({ ...a, [field]: value }));
+  };
+
+  const handleCardChange = (field) => (e) => {
+    const value = e.target.value;
+    setCard((c) => ({ ...c, [field]: value }));
+  };
+
+  function handleNext() {
+    if (step < 5) {
+      setStep(step + 1);
+    } else {
+      setBookingId('LN-' + Math.floor(100000 + Math.random() * 900000));
+      setConfirmed(true);
+    }
+  }
+
+  function handlePrev() {
+    setStep((s) => Math.max(1, s - 1));
+  }
+
+  function handleSelectService(id) {
+    setServiceId(id);
+    setSizeId(null);
+  }
+
+  function handleSelectSize(id) {
+    setSizeId(id);
+  }
+
+  return (
+    <div data-screen-label="Agendar" style={{ ...wizardContainer, padding: '30px 0 120px', animation: 'lina-fade-up 0.4s ease both' }}>
+      {!confirmed ? (
+        <div>
+          <div>
+            <ProgressBar step={step} />
+
+            {step === 1 && <StepService serviceId={serviceId} onSelect={handleSelectService} />}
+
+            {step === 2 && (
+              <StepDetails
+                service={service}
+                sizeId={sizeId}
+                onSelectSize={handleSelectSize}
+                qty={qty}
+                onInc={() => setQty((q) => Math.min(10, q + 1))}
+                onDec={() => setQty((q) => Math.max(1, q - 1))}
+              />
+            )}
+
+            {step === 3 && (
+              <StepDateTime
+                dateOptions={dateOptions}
+                selectedDate={selectedDate}
+                onSelectDate={(key) => {
+                  setSelectedDate(key);
+                  setSelectedTime(null);
+                }}
+                selectedTime={selectedTime}
+                onSelectTime={setSelectedTime}
+              />
+            )}
+
+            {step === 4 && <StepAddress address={address} onChange={handleAddressChange} />}
+
+            {step === 5 && (
+              <StepPayment
+                summary={{
+                  serviceName: service ? service.name : '',
+                  sizeLabel: selectedSize ? selectedSize.label : '',
+                  qty,
+                  dateLabel: selectedDateLabel,
+                  time: selectedTime,
+                  street: address.street,
+                  colonia: address.colonia,
+                  subtotal,
+                }}
+                paymentType={effectivePaymentType}
+                onSelectDeposit={() => setPaymentType('deposit')}
+                onSelectFull={() => setPaymentType('full')}
+                card={card}
+                onCardChange={handleCardChange}
+              />
+            )}
+          </div>
+
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: 'oklch(0.99 0.004 85 / 0.95)',
+              backdropFilter: 'blur(10px)',
+              borderTop: '1px solid var(--color-border)',
+              padding: '14px min(3vw, 20px)',
+              zIndex: 30,
+            }}
+          >
+            <div style={{ maxWidth: 560, margin: '0 auto', display: 'flex', gap: 12 }}>
+              {step > 1 && (
+                <button
+                  onClick={handlePrev}
+                  style={{ background: 'none', border: '1px solid var(--color-border-strong)', padding: '15px 22px', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
+                >
+                  Atrás
+                </button>
+              )}
+              <button
+                onClick={handleNext}
+                disabled={!canContinue}
+                style={{
+                  flex: 1,
+                  background: canContinue ? 'var(--color-primary)' : 'var(--color-border-strong)',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '15px 22px',
+                  borderRadius: 12,
+                  fontWeight: 700,
+                  fontSize: 15,
+                  cursor: canContinue ? 'pointer' : 'not-allowed',
+                }}
+              >
+                {mainButtonLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <Confirmation
+          dateLabel={selectedDateLabel}
+          time={selectedTime}
+          bookingId={bookingId}
+          onBackHome={() => navigate('/')}
+        />
+      )}
+    </div>
+  );
+}
