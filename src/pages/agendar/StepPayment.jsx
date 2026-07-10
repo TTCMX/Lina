@@ -14,6 +14,7 @@ export default function StepPayment({ summary, paymentType, onSelectDeposit, onS
       </h2>
 
       <div style={{ ...card, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Row label="Cliente" value={`${summary.customerName} · ${summary.customerPhone}`} alignRight />
         <Row label="Servicio" value={`${summary.serviceName} · ${summary.sizeLabel}`} />
         <Row label="Cantidad" value={summary.qty} />
         <Row label="Fecha" value={`${summary.dateLabel}, ${summary.time}`} />

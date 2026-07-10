@@ -1,11 +1,19 @@
 import { inputStyle, labelStyle } from '../../styles';
 
-export default function StepAddress({ address, onChange }) {
+export default function StepAddress({ customer, onCustomerChange, address, onChange }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 24, fontWeight: 500, margin: '0 0 6px' }}>
-        Dirección del servicio
+        Tus datos y dirección
       </h2>
+      <div>
+        <label style={labelStyle}>Nombre completo</label>
+        <input value={customer.name} onChange={onCustomerChange('name')} placeholder="Tu nombre" style={inputStyle} />
+      </div>
+      <div>
+        <label style={labelStyle}>Teléfono</label>
+        <input value={customer.phone} onChange={onCustomerChange('phone')} placeholder="10 dígitos" style={inputStyle} />
+      </div>
       <div>
         <label style={labelStyle}>Calle y número</label>
         <input value={address.street} onChange={onChange('street')} placeholder="Ej. Av. Reforma 123" style={inputStyle} />

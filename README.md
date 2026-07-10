@@ -29,8 +29,26 @@ npm run dev
 6. En Hostinger → **hPanel → Dominios → DNS / Zona DNS**, agrega esos mismos registros (sin cambiar los nameservers, el dominio se queda administrado en Hostinger).
 7. Espera la propagación (minutos a un par de horas) y Vercel emite el certificado SSL automáticamente.
 
+## Notificaciones de reservas y contacto (Supabase + Resend)
+
+Cuando alguien agenda un servicio o manda el formulario de contacto, el sitio llama a una función serverless de Vercel (`api/bookings.js`, `api/contact.js`) que:
+
+1. Guarda el registro en Supabase (tablas `bookings` y `contact_messages`, ver `supabase/schema.sql` — córrelo una vez en el SQL editor del proyecto de Supabase).
+2. Manda un correo de notificación vía Resend con los detalles.
+
+Variables de entorno que hay que configurar en el proyecto de Vercel (**Settings → Environment Variables**), nunca en el código:
+
+| Variable | Qué va ahí |
+|---|---|
+| `SUPABASE_URL` | URL del proyecto de Supabase (Settings → API) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key de Supabase (Settings → API) — solo se usa server-side, nunca se expone al navegador |
+| `RESEND_API_KEY` | API key de Resend |
+| `NOTIFY_FROM_EMAIL` | Remitente de los correos, ej. `reservas@linahome.pro` (el dominio debe estar verificado en Resend) |
+| `NOTIFY_TO_EMAIL` | A dónde llegan las notificaciones. Puede ser una o varias direcciones separadas por coma |
+
+Después de agregarlas, haz un redeploy en Vercel para que tomen efecto.
+
 ## Notas
 
-- El paso de pago es solo interfaz (sin procesador de pagos real todavía).
-- No hay backend: las reservas y el formulario de contacto viven solo en el estado del navegador.
+- El paso de pago es solo interfaz (sin procesador de pagos real todavía) — no se guarda ni se transmite el número de tarjeta a ningún lado.
 - Precios, depósito (%) y disponibilidad de recolección en taller están en `src/config.js` y `src/data/services.js`.

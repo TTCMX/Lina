@@ -13,6 +13,7 @@ import StepAddress from './agendar/StepAddress';
 import StepPayment from './agendar/StepPayment';
 import Confirmation from './agendar/Confirmation';
 
+const EMPTY_CUSTOMER = { name: '', phone: '' };
 const EMPTY_ADDRESS = { street: '', colonia: '', ciudad: '', referencias: '' };
 const EMPTY_CARD = { number: '', exp: '', cvc: '', name: '' };
 
@@ -27,11 +28,14 @@ export default function Agendar() {
   const [qty, setQty] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [customer, setCustomer] = useState(EMPTY_CUSTOMER);
   const [address, setAddress] = useState(EMPTY_ADDRESS);
   const [paymentType, setPaymentType] = useState(null);
   const [card, setCard] = useState(EMPTY_CARD);
   const [confirmed, setConfirmed] = useState(false);
   const [bookingId, setBookingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const dateOptions = useMemo(() => getDateOptions(), []);
 
@@ -43,7 +47,8 @@ export default function Agendar() {
 
   const effectivePaymentType = paymentType || DEFAULT_PAYMENT_TYPE;
 
-  const addressValid = address.street.trim().length > 2 && address.colonia.trim().length > 1 && address.ciudad.trim().length > 1;
+  const customerValid = customer.name.trim().length > 1 && customer.phone.trim().length >= 8;
+  const addressValid = customerValid && address.street.trim().length > 2 && address.colonia.trim().length > 1 && address.ciudad.trim().length > 1;
   const cardValid = card.number.trim().length >= 12 && card.exp.trim().length >= 4 && card.cvc.trim().length >= 3 && card.name.trim().length > 2;
 
   let canContinue = false;
@@ -51,12 +56,18 @@ export default function Agendar() {
   else if (step === 2) canContinue = !!sizeId;
   else if (step === 3) canContinue = !!selectedDate && !!selectedTime;
   else if (step === 4) canContinue = addressValid;
-  else if (step === 5) canContinue = cardValid;
+  else if (step === 5) canContinue = cardValid && !submitting;
 
   const depositAmount = Math.round(subtotal * (DEPOSIT_PERCENT / 100));
+  const amountCharged = effectivePaymentType === 'deposit' ? depositAmount : subtotal;
   const mainButtonLabel = step === 5
-    ? `Confirmar y pagar ${money(effectivePaymentType === 'deposit' ? depositAmount : subtotal)}`
+    ? (submitting ? 'Enviando...' : `Confirmar y pagar ${money(amountCharged)}`)
     : 'Continuar';
+
+  const handleCustomerChange = (field) => (e) => {
+    const value = e.target.value;
+    setCustomer((c) => ({ ...c, [field]: value }));
+  };
 
   const handleAddressChange = (field) => (e) => {
     const value = e.target.value;
@@ -68,12 +79,47 @@ export default function Agendar() {
     setCard((c) => ({ ...c, [field]: value }));
   };
 
-  function handleNext() {
+  async function handleNext() {
     if (step < 5) {
       setStep(step + 1);
-    } else {
-      setBookingId('LN-' + Math.floor(100000 + Math.random() * 900000));
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: service.id,
+          serviceName: service.name,
+          sizeId: selectedSize.id,
+          sizeLabel: selectedSize.label,
+          qty,
+          unitPrice: selectedSize.price,
+          subtotal,
+          date: selectedDate,
+          dateLabel: selectedDateLabel,
+          time: selectedTime,
+          customerName: customer.name,
+          customerPhone: customer.phone,
+          street: address.street,
+          colonia: address.colonia,
+          ciudad: address.ciudad,
+          referencias: address.referencias,
+          paymentType: effectivePaymentType,
+          amountCharged,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo agendar tu servicio.');
+      setBookingId(data.folio);
       setConfirmed(true);
+    } catch (err) {
+      setSubmitError(err.message || 'No se pudo agendar tu servicio. Intenta de nuevo.');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -123,11 +169,20 @@ export default function Agendar() {
               />
             )}
 
-            {step === 4 && <StepAddress address={address} onChange={handleAddressChange} />}
+            {step === 4 && (
+              <StepAddress
+                customer={customer}
+                onCustomerChange={handleCustomerChange}
+                address={address}
+                onChange={handleAddressChange}
+              />
+            )}
 
             {step === 5 && (
               <StepPayment
                 summary={{
+                  customerName: customer.name,
+                  customerPhone: customer.phone,
                   serviceName: service ? service.name : '',
                   sizeLabel: selectedSize ? selectedSize.label : '',
                   qty,
@@ -143,6 +198,12 @@ export default function Agendar() {
                 card={card}
                 onCardChange={handleCardChange}
               />
+            )}
+
+            {submitError && (
+              <div style={{ marginTop: 16, fontSize: 14, color: 'oklch(0.5 0.18 25)', background: 'oklch(0.96 0.03 25)', padding: '12px 14px', borderRadius: 10 }}>
+                {submitError}
+              </div>
             )}
           </div>
 
@@ -163,7 +224,8 @@ export default function Agendar() {
               {step > 1 && (
                 <button
                   onClick={handlePrev}
-                  style={{ background: 'none', border: '1px solid var(--color-border-strong)', padding: '15px 22px', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
+                  disabled={submitting}
+                  style={{ background: 'none', border: '1px solid var(--color-border-strong)', padding: '15px 22px', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: submitting ? 'not-allowed' : 'pointer' }}
                 >
                   Atrás
                 </button>

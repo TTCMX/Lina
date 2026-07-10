@@ -11,6 +11,8 @@ const INFO = [
 export default function Contacto() {
   const [form, setForm] = useState({ name: '', phone: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const setField = (field) => (e) => {
     const value = e.target.value;
@@ -18,6 +20,25 @@ export default function Contacto() {
   };
 
   const valid = form.name.trim().length > 1 && form.phone.trim().length >= 8;
+
+  async function handleSubmit() {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo enviar tu mensaje.');
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err.message || 'No se pudo enviar tu mensaje. Intenta de nuevo.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div data-screen-label="Contacto" style={{ ...container, padding: '44px 0 70px', animation: 'lina-fade-up 0.5s ease both' }}>
@@ -64,8 +85,8 @@ export default function Contacto() {
                 <textarea value={form.message} onChange={setField('message')} placeholder="¿En qué te ayudamos?" rows={4} style={{ ...inputStyle, resize: 'vertical' }} />
               </div>
               <button
-                onClick={() => setSubmitted(true)}
-                disabled={!valid}
+                onClick={handleSubmit}
+                disabled={!valid || submitting}
                 style={{
                   background: valid ? 'var(--color-primary)' : 'var(--color-border-strong)',
                   color: '#fff',
@@ -74,11 +95,16 @@ export default function Contacto() {
                   borderRadius: 12,
                   fontWeight: 700,
                   fontSize: 15,
-                  cursor: valid ? 'pointer' : 'not-allowed',
+                  cursor: valid && !submitting ? 'pointer' : 'not-allowed',
                 }}
               >
-                Enviar mensaje
+                {submitting ? 'Enviando...' : 'Enviar mensaje'}
               </button>
+              {submitError && (
+                <div style={{ fontSize: 13, color: 'oklch(0.5 0.18 25)', background: 'oklch(0.96 0.03 25)', padding: '10px 14px', borderRadius: 10 }}>
+                  {submitError}
+                </div>
+              )}
             </div>
           )}
         </div>
