@@ -1,4 +1,23 @@
-export default function Confirmation({ dateLabel, time, bookingId, onBackHome }) {
+import { buildGoogleCalendarUrl, buildIcsContent } from '../../utils/ics';
+import { secondaryButton } from '../../styles';
+
+export default function Confirmation({ dateISO, dateLabel, time, bookingId, serviceName, sizeLabel, street, colonia, ciudad, onBackHome }) {
+  const location = `${street}, ${colonia}, ${ciudad}`;
+  const title = `Lina — ${serviceName} (${sizeLabel})`;
+  const description = `Folio: ${bookingId}. Servicio de ${serviceName} (${sizeLabel}) con Lina.`;
+  const googleUrl = buildGoogleCalendarUrl({ dateISO, time, title, details: description, location });
+
+  function handleDownloadIcs() {
+    const content = buildIcsContent({ uid: bookingId, dateISO, time, summary: title, description, location });
+    const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lina-${bookingId}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 14, padding: '40px 10px', animation: 'lina-pop 0.45s ease both' }}>
       <div style={{ width: 68, height: 68, borderRadius: 999, background: 'var(--color-primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -13,6 +32,21 @@ export default function Confirmation({ dateLabel, time, bookingId, onBackHome })
       <div style={{ background: '#fff', border: '1px solid var(--color-border)', borderRadius: 14, padding: '16px 22px', fontSize: 14, fontWeight: 700, color: 'var(--color-text-muted)', marginTop: 8 }}>
         Folio: {bookingId}
       </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginTop: 10 }}>
+        <a
+          href={googleUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={{ ...secondaryButton, padding: '13px 20px', fontSize: 14, textDecoration: 'none', display: 'inline-block' }}
+        >
+          Agregar a Google Calendar
+        </a>
+        <button onClick={handleDownloadIcs} style={{ ...secondaryButton, padding: '13px 20px', fontSize: 14 }}>
+          Descargar .ics
+        </button>
+      </div>
+
       <button
         onClick={onBackHome}
         style={{ marginTop: 14, background: 'var(--color-dark)', color: '#fff', border: 'none', padding: '15px 26px', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}

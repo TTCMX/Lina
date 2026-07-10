@@ -1,5 +1,6 @@
 import { insertRow, sendEmail, sendManagerNotification, requireFields } from './_util.js';
 import { customerBookingEmailHtml, managerBookingEmailHtml } from './_email.js';
+import { buildIcsContent } from '../src/utils/ics.js';
 
 const REQUIRED_FIELDS = [
   'serviceId', 'serviceName', 'sizeId', 'sizeLabel', 'qty', 'unitPrice', 'subtotal',
@@ -91,6 +92,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    const location = `${body.street}, ${body.colonia}, ${body.ciudad}`;
+    const icsContent = buildIcsContent({
+      uid: folio,
+      dateISO: body.date,
+      time: body.time,
+      summary: `Lina — ${body.serviceName} (${body.sizeLabel})`,
+      description: `Folio: ${folio}. Servicio de ${body.serviceName} (${body.sizeLabel}) con Lina.`,
+      location,
+    });
+
     await sendEmail({
       to: body.customerEmail,
       subject: `Tu reserva con Lina está confirmada — Folio ${folio}`,
@@ -105,11 +116,15 @@ export default async function handler(req, res) {
         `Dirección: ${body.street}, ${body.colonia}, ${body.ciudad}`,
         paymentLine,
         '',
+        'Adjuntamos un archivo .ics para que agregues la cita a tu calendario.',
         'Te enviaremos un recordatorio antes de la visita. Si necesitas cambiar algo, contáctanos respondiendo este correo.',
         '',
         '— Equipo Lina',
       ].join('\n'),
       html: customerBookingEmailHtml(emailData),
+      attachments: [
+        { filename: `lina-${folio}.ics`, content: Buffer.from(icsContent).toString('base64') },
+      ],
     });
   } catch (err) {
     console.error('Booking saved but customer confirmation email failed:', err);

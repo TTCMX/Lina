@@ -253,9 +253,15 @@ export default function Agendar() {
         </div>
       ) : (
         <Confirmation
+          dateISO={selectedDate}
           dateLabel={selectedDateLabel}
           time={selectedTime}
           bookingId={bookingId}
+          serviceName={service ? service.name : ''}
+          sizeLabel={selectedSize ? selectedSize.label : ''}
+          street={address.street}
+          colonia={address.colonia}
+          ciudad={address.ciudad}
           onBackHome={() => navigate('/')}
         />
       )}

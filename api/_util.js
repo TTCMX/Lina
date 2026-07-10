@@ -21,7 +21,7 @@ export async function insertRow(table, row) {
   }
 }
 
-export async function sendEmail({ to, subject, text, html }) {
+export async function sendEmail({ to, subject, text, html, attachments }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -34,6 +34,7 @@ export async function sendEmail({ to, subject, text, html }) {
       subject,
       text,
       ...(html ? { html } : {}),
+      ...(attachments ? { attachments } : {}),
     }),
   });
 
