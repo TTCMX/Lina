@@ -118,7 +118,6 @@ export default async function handler(req, res) {
         failure: `${siteUrl}/agendar/pago-fallido?folio=${folio}`,
         pending: `${siteUrl}/agendar/pago-pendiente?folio=${folio}`,
       },
-      notificationUrl: `${siteUrl}/api/payments/webhook`,
       metadata: { booking_id: booking.id, folio },
     });
 

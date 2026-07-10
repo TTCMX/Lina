@@ -13,7 +13,7 @@ function mpWebhookSecret() {
   return (process.env.MP_WEBHOOK_SECRET || '').trim();
 }
 
-export async function createPreference({ items, externalReference, backUrls, notificationUrl, metadata }) {
+export async function createPreference({ items, externalReference, backUrls, metadata }) {
   const res = await fetch(`${API_BASE}/checkout/preferences`, {
     method: 'POST',
     headers: {
@@ -25,7 +25,13 @@ export async function createPreference({ items, externalReference, backUrls, not
       external_reference: externalReference,
       back_urls: backUrls,
       auto_return: 'approved',
-      notification_url: notificationUrl,
+      // Deliberately no notification_url here: setting it per-preference
+      // triggers Mercado Pago's legacy IPN delivery (topic/id in the query
+      // string), which MP's own docs say can't be reliably validated via
+      // the webhook secret even though it still sends an x-signature
+      // header. Relying solely on the dashboard-configured Webhooks
+      // subscription gets the newer type/data.id JSON format instead,
+      // which the signature check in verifyWebhookSignature() is built for.
       metadata,
       // Card only: excludes OXXO/cash vouchers and bank transfers, which
       // settle async (hours to days) and would leave a slot reserved in
