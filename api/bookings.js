@@ -1,4 +1,5 @@
 import { insertRow, sendEmail, sendManagerNotification, requireFields } from './_util.js';
+import { customerBookingEmailHtml, managerBookingEmailHtml } from './_email.js';
 
 const REQUIRED_FIELDS = [
   'serviceId', 'serviceName', 'sizeId', 'sizeLabel', 'qty', 'unitPrice', 'subtotal',
@@ -54,6 +55,23 @@ export default async function handler(req, res) {
     ? `Depósito pagado: $${body.amountCharged} MXN (el resto se paga al terminar el servicio)`
     : `Pago completo: $${body.amountCharged} MXN`;
 
+  const emailData = {
+    folio,
+    customerName: body.customerName,
+    customerPhone: body.customerPhone,
+    customerEmail: body.customerEmail,
+    serviceName: body.serviceName,
+    sizeLabel: body.sizeLabel,
+    qty: body.qty,
+    dateLabel: body.dateLabel,
+    time: body.time,
+    street: body.street,
+    colonia: body.colonia,
+    ciudad: body.ciudad,
+    referencias: body.referencias || null,
+    paymentLine,
+  };
+
   try {
     await sendManagerNotification({
       subject: `Nueva reserva ${folio} — ${body.serviceName}`,
@@ -66,6 +84,7 @@ export default async function handler(req, res) {
         body.referencias ? `Referencias: ${body.referencias}` : null,
         `Pago: ${paymentLine}`,
       ].filter(Boolean).join('\n'),
+      html: managerBookingEmailHtml(emailData),
     });
   } catch (err) {
     console.error('Booking saved but manager notification email failed:', err);
@@ -90,6 +109,7 @@ export default async function handler(req, res) {
         '',
         '— Equipo Lina',
       ].join('\n'),
+      html: customerBookingEmailHtml(emailData),
     });
   } catch (err) {
     console.error('Booking saved but customer confirmation email failed:', err);

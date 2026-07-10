@@ -21,7 +21,7 @@ export async function insertRow(table, row) {
   }
 }
 
-export async function sendEmail({ to, subject, text }) {
+export async function sendEmail({ to, subject, text, html }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -33,6 +33,7 @@ export async function sendEmail({ to, subject, text }) {
       to: Array.isArray(to) ? to : [to],
       subject,
       text,
+      ...(html ? { html } : {}),
     }),
   });
 
@@ -42,11 +43,12 @@ export async function sendEmail({ to, subject, text }) {
   }
 }
 
-export async function sendManagerNotification({ subject, text }) {
+export async function sendManagerNotification({ subject, text, html }) {
   return sendEmail({
     to: process.env.NOTIFY_TO_EMAIL.split(',').map((s) => s.trim()),
     subject,
     text,
+    html,
   });
 }
 

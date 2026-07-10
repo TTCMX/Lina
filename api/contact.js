@@ -1,4 +1,5 @@
 import { insertRow, sendManagerNotification, requireFields } from './_util.js';
+import { managerContactEmailHtml } from './_email.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -27,6 +28,7 @@ export default async function handler(req, res) {
     await sendManagerNotification({
       subject: `Nuevo mensaje de contacto — ${body.name}`,
       text: `Nombre: ${body.name}\nTeléfono: ${body.phone}\nMensaje: ${body.message || '(sin mensaje)'}`,
+      html: managerContactEmailHtml({ name: body.name, phone: body.phone, message: body.message || null }),
     });
   } catch (err) {
     console.error('Contact message saved but notification email failed:', err);
