@@ -2,7 +2,7 @@ function supabaseBaseUrl() {
   return (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
 }
 
-export async function insertRow(table, row) {
+export async function insertRow(table, row, { returning = false } = {}) {
   const url = `${supabaseBaseUrl()}/rest/v1/${table}`;
   const res = await fetch(url, {
     method: 'POST',
@@ -10,7 +10,7 @@ export async function insertRow(table, row) {
       apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
       Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
       'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
+      Prefer: returning ? 'return=representation' : 'return=minimal',
     },
     body: JSON.stringify(row),
   });
@@ -21,6 +21,7 @@ export async function insertRow(table, row) {
     err.status = res.status;
     throw err;
   }
+  return returning ? res.json() : undefined;
 }
 
 export async function queryRows(table, params) {

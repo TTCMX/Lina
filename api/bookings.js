@@ -1,13 +1,14 @@
-import { insertRow, sendEmail, sendManagerNotification, requireFields } from './_util.js';
-import { customerBookingEmailHtml, managerBookingEmailHtml } from './_email.js';
-import { buildIcsContent } from '../src/utils/ics.js';
+import { insertRow, patchRow, requireFields } from './_util.js';
+import { createPreference } from './_mercadopago.js';
+import { findService } from '../src/data/services.js';
+import { DEPOSIT_PERCENT } from '../src/config.js';
 
 const REQUIRED_FIELDS = [
-  'serviceId', 'serviceName', 'sizeId', 'sizeLabel', 'qty', 'unitPrice', 'subtotal',
+  'serviceId', 'sizeId', 'qty',
   'date', 'dateLabel', 'time',
   'customerName', 'customerPhone', 'customerEmail',
   'street', 'colonia', 'ciudad',
-  'paymentType', 'amountCharged',
+  'paymentType',
 ];
 
 export default async function handler(req, res) {
@@ -22,18 +23,36 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Falta el campo: ${missing}` });
   }
 
+  // Never trust price/amount fields from the client — real money is on
+  // the line. Recompute everything from the service catalog server-side.
+  const service = findService(body.serviceId);
+  const size = service?.sizes.find((z) => z.id === body.sizeId);
+  if (!service || !size) {
+    return res.status(400).json({ error: 'Servicio o tamaño inválido.' });
+  }
+  if (!['deposit', 'full'].includes(body.paymentType)) {
+    return res.status(400).json({ error: 'Forma de pago inválida.' });
+  }
+  const qty = Math.min(10, Math.max(1, Math.round(Number(body.qty)) || 1));
+
+  const unitPrice = size.price;
+  const subtotal = unitPrice * qty;
+  const depositAmount = Math.round(subtotal * (DEPOSIT_PERCENT / 100));
+  const amountCharged = body.paymentType === 'deposit' ? depositAmount : subtotal;
+
   const folio = 'LN-' + Math.floor(100000 + Math.random() * 900000);
 
+  let booking;
   try {
-    await insertRow('bookings', {
+    [booking] = await insertRow('bookings', {
       folio,
-      service_id: body.serviceId,
-      service_name: body.serviceName,
-      size_id: body.sizeId,
-      size_label: body.sizeLabel,
-      qty: body.qty,
-      unit_price: body.unitPrice,
-      subtotal: body.subtotal,
+      service_id: service.id,
+      service_name: service.name,
+      size_id: size.id,
+      size_label: size.label,
+      qty,
+      unit_price: unitPrice,
+      subtotal,
       booking_date: body.date,
       booking_date_label: body.dateLabel,
       booking_time: body.time,
@@ -45,8 +64,9 @@ export default async function handler(req, res) {
       ciudad: body.ciudad,
       referencias: body.referencias || null,
       payment_type: body.paymentType,
-      amount_charged: body.amountCharged,
-    });
+      amount_charged: amountCharged,
+      status: 'pending_payment',
+    }, { returning: true });
   } catch (err) {
     console.error(err);
     if (err.status === 409) {
@@ -55,83 +75,38 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'No se pudo guardar la reserva. Intenta de nuevo.' });
   }
 
-  const paymentLine = body.paymentType === 'deposit'
-    ? `Depósito pagado: $${body.amountCharged} MXN (el resto se paga al terminar el servicio)`
-    : `Pago completo: $${body.amountCharged} MXN`;
-
-  const emailData = {
-    folio,
-    customerName: body.customerName,
-    customerPhone: body.customerPhone,
-    customerEmail: body.customerEmail,
-    serviceName: body.serviceName,
-    sizeLabel: body.sizeLabel,
-    qty: body.qty,
-    dateLabel: body.dateLabel,
-    time: body.time,
-    street: body.street,
-    colonia: body.colonia,
-    ciudad: body.ciudad,
-    referencias: body.referencias || null,
-    paymentLine,
-  };
+  const siteUrl = process.env.SITE_URL.replace(/\/+$/, '');
 
   try {
-    await sendManagerNotification({
-      subject: `Nueva reserva ${folio} — ${body.serviceName}`,
-      text: [
-        `Folio: ${folio}`,
-        `Cliente: ${body.customerName} — ${body.customerPhone} — ${body.customerEmail}`,
-        `Servicio: ${body.serviceName} · ${body.sizeLabel} x${body.qty}`,
-        `Fecha: ${body.dateLabel}, ${body.time}`,
-        `Dirección: ${body.street}, ${body.colonia}, ${body.ciudad}`,
-        body.referencias ? `Referencias: ${body.referencias}` : null,
-        `Pago: ${paymentLine}`,
-      ].filter(Boolean).join('\n'),
-      html: managerBookingEmailHtml(emailData),
-    });
-  } catch (err) {
-    console.error('Booking saved but manager notification email failed:', err);
-  }
-
-  try {
-    const location = `${body.street}, ${body.colonia}, ${body.ciudad}`;
-    const icsContent = buildIcsContent({
-      uid: folio,
-      dateISO: body.date,
-      time: body.time,
-      summary: `Lina — ${body.serviceName} (${body.sizeLabel})`,
-      description: `Folio: ${folio}. Servicio de ${body.serviceName} (${body.sizeLabel}) con Lina.`,
-      location,
-    });
-
-    await sendEmail({
-      to: body.customerEmail,
-      subject: `Tu reserva con Lina está confirmada — Folio ${folio}`,
-      text: [
-        `¡Hola ${body.customerName}!`,
-        '',
-        'Tu servicio con Lina quedó agendado. Aquí el resumen:',
-        '',
-        `Folio: ${folio}`,
-        `Servicio: ${body.serviceName} · ${body.sizeLabel} x${body.qty}`,
-        `Fecha: ${body.dateLabel}, ${body.time}`,
-        `Dirección: ${body.street}, ${body.colonia}, ${body.ciudad}`,
-        paymentLine,
-        '',
-        'Adjuntamos un archivo .ics para que agregues la cita a tu calendario.',
-        'Te enviaremos un recordatorio antes de la visita. Si necesitas cambiar algo, contáctanos respondiendo este correo.',
-        '',
-        '— Equipo Lina',
-      ].join('\n'),
-      html: customerBookingEmailHtml(emailData),
-      attachments: [
-        { filename: `lina-${folio}.ics`, content: Buffer.from(icsContent).toString('base64') },
+    const preference = await createPreference({
+      items: [
+        {
+          title: `Lina — ${service.name} (${size.label}) x${qty}`,
+          quantity: 1,
+          unit_price: amountCharged,
+          currency_id: 'MXN',
+        },
       ],
+      externalReference: String(booking.id),
+      backUrls: {
+        success: `${siteUrl}/agendar/pago-exitoso?folio=${folio}`,
+        failure: `${siteUrl}/agendar/pago-fallido?folio=${folio}`,
+        pending: `${siteUrl}/agendar/pago-pendiente?folio=${folio}`,
+      },
+      notificationUrl: `${siteUrl}/api/payments/webhook`,
+      metadata: { booking_id: booking.id, folio },
     });
-  } catch (err) {
-    console.error('Booking saved but customer confirmation email failed:', err);
-  }
 
-  return res.status(200).json({ folio });
+    await patchRow('bookings', { id: `eq.${booking.id}` }, { mp_preference_id: preference.id });
+
+    return res.status(200).json({ folio, checkoutUrl: preference.init_point });
+  } catch (err) {
+    console.error('Booking saved but Mercado Pago preference failed, releasing slot:', err);
+    try {
+      await patchRow('bookings', { id: `eq.${booking.id}` }, { status: 'cancelled' });
+    } catch (releaseErr) {
+      console.error('Failed to release slot after preference error:', releaseErr);
+    }
+    return res.status(500).json({ error: 'No se pudo iniciar el pago. Intenta de nuevo.' });
+  }
 }

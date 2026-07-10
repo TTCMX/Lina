@@ -5,6 +5,7 @@ import Servicios from './pages/Servicios';
 import Nosotros from './pages/Nosotros';
 import Contacto from './pages/Contacto';
 import Agendar from './pages/Agendar';
+import PaymentReturn from './pages/PaymentReturn';
 import Admin from './pages/admin/Admin';
 
 function App() {
@@ -18,6 +19,9 @@ function App() {
           <Route path="/nosotros" element={<Nosotros />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/agendar" element={<Agendar />} />
+          <Route path="/agendar/pago-exitoso" element={<PaymentReturn outcome="success" />} />
+          <Route path="/agendar/pago-fallido" element={<PaymentReturn outcome="failure" />} />
+          <Route path="/agendar/pago-pendiente" element={<PaymentReturn outcome="pending" />} />
           <Route path="*" element={<Home />} />
         </Route>
       </Routes>

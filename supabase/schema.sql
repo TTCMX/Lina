@@ -23,8 +23,10 @@ create table if not exists bookings (
   referencias text,
   payment_type text not null,
   amount_charged int not null,
-  status text not null default 'confirmed' check (status in ('confirmed', 'completed', 'cancelled')),
-  updated_at timestamptz not null default now()
+  status text not null default 'pending_payment' check (status in ('pending_payment', 'confirmed', 'completed', 'cancelled')),
+  updated_at timestamptz not null default now(),
+  mp_preference_id text,
+  mp_payment_id text
 );
 
 alter table bookings enable row level security;

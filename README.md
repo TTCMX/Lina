@@ -63,7 +63,31 @@ Al cancelar o reagendar una reserva desde el panel, se le manda un correo al cli
 
 Correr `supabase/migrations/0003_booking_status_and_backoffice.sql` en el SQL editor de Supabase antes de usar el back office (agrega el campo de estado y hace que cancelar libere el horario).
 
+## Pagos (Mercado Pago Checkout Pro)
+
+Al llegar al paso de pago, el cliente es redirigido a Mercado Pago para pagar con tarjeta (OXXO, transferencia y otros métodos que no confirman al instante están desactivados a propósito). La reserva se guarda como `pending_payment` (apartando el horario) *antes* de mandarlo a pagar, y Mercado Pago le pega a un webhook (`api/payments/webhook.js`) cuando el pago se resuelve — ahí es donde de verdad se confirma la reserva y se mandan los correos, nunca confiando en la redirección del navegador sola.
+
+**Configuración en Mercado Pago** (usando la cuenta que ya tienen en otro proyecto):
+
+1. Entra a [mercadopago.com.mx/developers](https://www.mercadopago.com.mx/developers/panel) con esa cuenta.
+2. **Tus integraciones → Crear aplicación** — crea una aplicación nueva, ej. "Lina" (esto le da credenciales y configuración de webhook propias a este proyecto, aunque el dinero llega a la misma cuenta de siempre).
+3. En esa aplicación, copia el **Access Token de producción** → variable `MP_ACCESS_TOKEN`.
+4. En la misma aplicación, ve a **Webhooks**, agrega la URL `https://tudominio.com/api/payments/webhook`, suscríbete al evento `payments`, y copia la **clave secreta** que te da → variable `MP_WEBHOOK_SECRET`.
+
+Variables de entorno en Vercel:
+
+| Variable | Qué va ahí |
+|---|---|
+| `MP_ACCESS_TOKEN` | Access token de producción de la aplicación de Mercado Pago |
+| `MP_WEBHOOK_SECRET` | Clave secreta del webhook (Mercado Pago → esa aplicación → Webhooks) |
+| `SITE_URL` | URL completa del sitio en producción, ej. `https://linahome.pro` (sin `/` al final) — se usa para armar las URLs de retorno y el webhook |
+
+Correr `supabase/migrations/0004_mercadopago_payments.sql` en Supabase antes de usar esto (agrega el estado `pending_payment` y columnas para guardar el id de pago/preferencia de Mercado Pago).
+
+**Importante — es dinero real desde el día uno** (se configuró así a propósito, sin modo prueba): antes de compartir el link con clientes, haz tú mismo una reserva de principio a fin con una tarjeta real para confirmar que todo el flujo funciona — el correo de confirmación llega, el back office lo muestra como "Confirmada", etc.
+
+**Limitación conocida:** si un cliente llega hasta la pantalla de pago y abandona sin pagar (cierra la pestaña, no completa la tarjeta), esa reserva se queda en `pending_payment` y el horario sigue apartado indefinidamente — no hay limpieza automática todavía. Desde el back office puedes cancelarla manualmente para liberar el horario (filtro "Pago pendiente").
+
 ## Notas
 
-- El paso de pago es solo interfaz (sin procesador de pagos real todavía) — no se guarda ni se transmite el número de tarjeta a ningún lado.
 - Precios, depósito (%) y disponibilidad de recolección en taller están en `src/config.js` y `src/data/services.js`.

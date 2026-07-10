@@ -1,8 +1,8 @@
 import { money } from '../../utils/money';
-import { card, inputStyle } from '../../styles';
+import { card } from '../../styles';
 import { DEPOSIT_PERCENT } from '../../config';
 
-export default function StepPayment({ summary, paymentType, onSelectDeposit, onSelectFull, card: cardData, onCardChange }) {
+export default function StepPayment({ summary, paymentType, onSelectDeposit, onSelectFull }) {
   const isDeposit = paymentType === 'deposit';
   const isFull = paymentType === 'full';
   const depositAmount = Math.round(summary.subtotal * (DEPOSIT_PERCENT / 100));
@@ -59,14 +59,8 @@ export default function StepPayment({ summary, paymentType, onSelectDeposit, onS
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 700 }}>Datos de tarjeta</div>
-        <input value={cardData.number} onChange={onCardChange('number')} placeholder="Número de tarjeta" style={inputStyle} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <input value={cardData.exp} onChange={onCardChange('exp')} placeholder="MM/AA" style={inputStyle} />
-          <input value={cardData.cvc} onChange={onCardChange('cvc')} placeholder="CVC" style={inputStyle} />
-        </div>
-        <input value={cardData.name} onChange={onCardChange('name')} placeholder="Nombre en la tarjeta" style={inputStyle} />
+      <div style={{ fontSize: 13, color: 'var(--color-text-muted-3)', background: 'var(--color-surface)', padding: '12px 14px', borderRadius: 10, lineHeight: 1.5 }}>
+        Al confirmar, te llevamos a Mercado Pago para completar el pago con tarjeta de forma segura. Volverás a Lina automáticamente cuando termines.
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import BookingCard from './BookingCard';
 const STATUS_FILTERS = [
   { id: 'all', label: 'Todas' },
   { id: 'confirmed', label: 'Confirmadas' },
+  { id: 'pending_payment', label: 'Pago pendiente' },
   { id: 'completed', label: 'Completadas' },
   { id: 'cancelled', label: 'Canceladas' },
 ];

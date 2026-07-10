@@ -3,6 +3,7 @@ import { getDateOptions, TIME_SLOTS } from '../../utils/dates';
 import { money } from '../../utils/money';
 
 const STATUS_STYLE = {
+  pending_payment: { bg: 'oklch(0.95 0.05 80)', color: 'oklch(0.45 0.1 80)', label: 'Pago pendiente' },
   confirmed: { bg: 'var(--color-primary-light)', color: 'var(--color-primary-tint)', label: 'Confirmada' },
   completed: { bg: 'var(--color-dark)', color: '#fff', label: 'Completada' },
   cancelled: { bg: 'oklch(0.93 0.02 25)', color: 'oklch(0.45 0.15 25)', label: 'Cancelada' },
@@ -19,7 +20,8 @@ export default function BookingCard({ booking, onUpdated, onError }) {
   const [saving, setSaving] = useState(false);
 
   const statusStyle = STATUS_STYLE[booking.status] || STATUS_STYLE.confirmed;
-  const isActive = booking.status === 'confirmed';
+  const isConfirmed = booking.status === 'confirmed';
+  const isPendingPayment = booking.status === 'pending_payment';
 
   async function patch(body) {
     setSaving(true);
@@ -110,11 +112,20 @@ export default function BookingCard({ booking, onUpdated, onError }) {
         {booking.referencias && <Field label="Referencias" value={booking.referencias} />}
       </div>
 
-      {isActive && !rescheduling && (
+      {isConfirmed && !rescheduling && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <SmallButton onClick={handleComplete} disabled={saving}>Marcar completada</SmallButton>
           <SmallButton onClick={handleOpenReschedule} disabled={saving}>Reagendar</SmallButton>
           <SmallButton onClick={handleCancel} disabled={saving} danger>Cancelar</SmallButton>
+        </div>
+      )}
+
+      {isPendingPayment && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 12, color: 'var(--color-text-muted-3)' }}>El cliente no ha completado el pago todavía. El horario sigue apartado.</div>
+          <div>
+            <SmallButton onClick={handleCancel} disabled={saving} danger>Cancelar y liberar horario</SmallButton>
+          </div>
         </div>
       )}
 
