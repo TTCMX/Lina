@@ -7,7 +7,7 @@ export default function Admin() {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    fetch('/api/admin/session')
+    fetch('/api/admin/auth')
       .then((r) => r.json())
       .then((data) => setAuthenticated(!!data.authenticated))
       .catch(() => setAuthenticated(false))

@@ -1,4 +1,4 @@
-import { insertRow, patchRow, requireFields } from './_util.js';
+import { insertRow, patchRow, queryRows, requireFields } from './_util.js';
 import { createPreference } from './_mercadopago.js';
 import { redeemCoupon, releaseCoupon, couponErrorMessage } from './_coupons.js';
 import { findService } from '../src/data/services.js';
@@ -13,8 +13,12 @@ const REQUIRED_FIELDS = [
 ];
 
 export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    return handleStatus(req, res);
+  }
+
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -130,5 +134,34 @@ export default async function handler(req, res) {
       console.error('Failed to release slot after preference error:', releaseErr);
     }
     return res.status(500).json({ error: 'No se pudo iniciar el pago. Intenta de nuevo.' });
+  }
+}
+
+async function handleStatus(req, res) {
+  const folio = req.query.folio;
+  if (!folio) {
+    return res.status(400).json({ error: 'Falta el folio' });
+  }
+
+  try {
+    // Deliberately minimal fields — this endpoint is public/unauthenticated,
+    // so no customer PII (name/phone/email/address) goes in the response.
+    const rows = await queryRows('bookings', {
+      folio: `eq.${folio}`,
+      select: 'folio,status,booking_date_label,booking_time',
+    });
+    const booking = rows[0];
+    if (!booking) {
+      return res.status(404).json({ error: 'No encontrado' });
+    }
+    return res.status(200).json({
+      folio: booking.folio,
+      status: booking.status,
+      dateLabel: booking.booking_date_label,
+      time: booking.booking_time,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'No se pudo consultar la reserva.' });
   }
 }

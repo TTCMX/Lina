@@ -11,10 +11,10 @@ export default function AdminLogin({ onLoggedIn }) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ action: 'login', password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'No se pudo iniciar sesión.');

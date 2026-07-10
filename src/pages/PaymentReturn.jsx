@@ -20,7 +20,7 @@ export default function PaymentReturn({ outcome }) {
     async function tick() {
       if (cancelled) return;
       try {
-        const res = await fetch(`/api/bookings/status?folio=${folio}`);
+        const res = await fetch(`/api/bookings?folio=${folio}`);
         const data = await res.json();
         if (cancelled) return;
         if (res.ok) {

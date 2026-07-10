@@ -67,7 +67,7 @@ export default function CouponsPanel() {
 
   async function handleToggle(coupon) {
     try {
-      const res = await fetch(`/api/admin/coupons/${coupon.id}`, {
+      const res = await fetch(`/api/admin/coupons?id=${coupon.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !coupon.active }),

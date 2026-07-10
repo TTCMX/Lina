@@ -26,7 +26,7 @@ export default function BookingCard({ booking, onUpdated, onError }) {
   async function patch(body) {
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/bookings/${booking.id}`, {
+      const res = await fetch(`/api/admin/bookings?id=${booking.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
