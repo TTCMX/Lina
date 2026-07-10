@@ -22,7 +22,8 @@ create table if not exists bookings (
   ciudad text not null,
   referencias text,
   payment_type text not null,
-  amount_charged int not null
+  amount_charged int not null,
+  unique (booking_date, booking_time)
 );
 
 alter table bookings enable row level security;

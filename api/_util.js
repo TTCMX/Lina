@@ -17,8 +17,27 @@ export async function insertRow(table, row) {
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    throw new Error(`Supabase insert into ${table} failed (url=${url}): ${res.status} ${detail}`);
+    const err = new Error(`Supabase insert into ${table} failed (url=${url}): ${res.status} ${detail}`);
+    err.status = res.status;
+    throw err;
   }
+}
+
+export async function queryRows(table, params) {
+  const qs = new URLSearchParams(params).toString();
+  const url = `${supabaseBaseUrl()}/rest/v1/${table}?${qs}`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+    },
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`Supabase query on ${table} failed (url=${url}): ${res.status} ${detail}`);
+  }
+  return res.json();
 }
 
 export async function sendEmail({ to, subject, text, html, attachments }) {

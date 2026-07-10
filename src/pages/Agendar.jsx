@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { findService } from '../data/services';
 import { getDateOptions } from '../utils/dates';
@@ -37,8 +37,31 @@ export default function Agendar() {
   const [bookingId, setBookingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [takenSlots, setTakenSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const dateOptions = useMemo(() => getDateOptions(), []);
+
+  async function loadAvailability(date) {
+    if (!date) {
+      setTakenSlots([]);
+      return;
+    }
+    setLoadingSlots(true);
+    try {
+      const res = await fetch(`/api/availability?date=${date}`);
+      const data = await res.json();
+      setTakenSlots(res.ok ? data.takenSlots || [] : []);
+    } catch {
+      setTakenSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  }
+
+  useEffect(() => {
+    loadAvailability(selectedDate);
+  }, [selectedDate]);
 
   const service = findService(serviceId);
   const selectedSize = service ? service.sizes.find((z) => z.id === sizeId) : null;
@@ -54,7 +77,7 @@ export default function Agendar() {
   let canContinue = false;
   if (step === 1) canContinue = !!serviceId;
   else if (step === 2) canContinue = !!sizeId;
-  else if (step === 3) canContinue = !!selectedDate && !!selectedTime;
+  else if (step === 3) canContinue = !!selectedDate && !!selectedTime && !takenSlots.includes(selectedTime);
   else if (step === 4) canContinue = addressValid;
   else if (step === 5) canContinue = !submitting;
 
@@ -114,7 +137,14 @@ export default function Agendar() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'No se pudo agendar tu servicio.');
+      if (!res.ok) {
+        if (res.status === 409) {
+          setStep(3);
+          setSelectedTime(null);
+          loadAvailability(selectedDate);
+        }
+        throw new Error(data.error || 'No se pudo agendar tu servicio.');
+      }
       setBookingId(data.folio);
       setConfirmed(true);
     } catch (err) {
@@ -167,6 +197,8 @@ export default function Agendar() {
                 }}
                 selectedTime={selectedTime}
                 onSelectTime={setSelectedTime}
+                takenSlots={takenSlots}
+                loadingSlots={loadingSlots}
               />
             )}
 

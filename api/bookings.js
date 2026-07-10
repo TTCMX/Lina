@@ -49,6 +49,9 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error(err);
+    if (err.status === 409) {
+      return res.status(409).json({ error: 'Ese horario ya no está disponible. Elige otra fecha u hora.' });
+    }
     return res.status(500).json({ error: 'No se pudo guardar la reserva. Intenta de nuevo.' });
   }
 
