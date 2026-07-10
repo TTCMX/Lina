@@ -21,7 +21,7 @@ export async function insertRow(table, row) {
   }
 }
 
-export async function sendNotification({ subject, text }) {
+export async function sendEmail({ to, subject, text }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -29,8 +29,8 @@ export async function sendNotification({ subject, text }) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: process.env.NOTIFY_FROM_EMAIL,
-      to: process.env.NOTIFY_TO_EMAIL.split(',').map((s) => s.trim()),
+      from: `Lina <${process.env.NOTIFY_FROM_EMAIL}>`,
+      to: Array.isArray(to) ? to : [to],
       subject,
       text,
     }),
@@ -40,6 +40,14 @@ export async function sendNotification({ subject, text }) {
     const detail = await res.text().catch(() => '');
     throw new Error(`Resend send failed: ${res.status} ${detail}`);
   }
+}
+
+export async function sendManagerNotification({ subject, text }) {
+  return sendEmail({
+    to: process.env.NOTIFY_TO_EMAIL.split(',').map((s) => s.trim()),
+    subject,
+    text,
+  });
 }
 
 export function requireFields(body, fields) {

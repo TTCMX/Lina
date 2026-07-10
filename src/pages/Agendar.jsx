@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { findService } from '../data/services';
 import { getDateOptions } from '../utils/dates';
 import { money } from '../utils/money';
+import { isValidEmail } from '../utils/email';
 import { wizardContainer } from '../styles';
 import { DEFAULT_PAYMENT_TYPE, DEPOSIT_PERCENT } from '../config';
 import ProgressBar from './agendar/ProgressBar';
@@ -13,7 +14,7 @@ import StepAddress from './agendar/StepAddress';
 import StepPayment from './agendar/StepPayment';
 import Confirmation from './agendar/Confirmation';
 
-const EMPTY_CUSTOMER = { name: '', phone: '' };
+const EMPTY_CUSTOMER = { name: '', phone: '', email: '' };
 const EMPTY_ADDRESS = { street: '', colonia: '', ciudad: '', referencias: '' };
 const EMPTY_CARD = { number: '', exp: '', cvc: '', name: '' };
 
@@ -47,7 +48,7 @@ export default function Agendar() {
 
   const effectivePaymentType = paymentType || DEFAULT_PAYMENT_TYPE;
 
-  const customerValid = customer.name.trim().length > 1 && customer.phone.trim().length >= 8;
+  const customerValid = customer.name.trim().length > 1 && customer.phone.trim().length >= 8 && isValidEmail(customer.email);
   const addressValid = customerValid && address.street.trim().length > 2 && address.colonia.trim().length > 1 && address.ciudad.trim().length > 1;
 
   let canContinue = false;
@@ -103,6 +104,7 @@ export default function Agendar() {
           time: selectedTime,
           customerName: customer.name,
           customerPhone: customer.phone,
+          customerEmail: customer.email,
           street: address.street,
           colonia: address.colonia,
           ciudad: address.ciudad,

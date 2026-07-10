@@ -16,6 +16,7 @@ create table if not exists bookings (
   booking_time text not null,
   customer_name text not null,
   customer_phone text not null,
+  customer_email text not null,
   street text not null,
   colonia text not null,
   ciudad text not null,

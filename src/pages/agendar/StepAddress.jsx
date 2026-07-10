@@ -15,6 +15,10 @@ export default function StepAddress({ customer, onCustomerChange, address, onCha
         <input value={customer.phone} onChange={onCustomerChange('phone')} placeholder="10 dígitos" style={inputStyle} />
       </div>
       <div>
+        <label style={labelStyle}>Correo</label>
+        <input type="email" value={customer.email} onChange={onCustomerChange('email')} placeholder="tucorreo@ejemplo.com" style={inputStyle} />
+      </div>
+      <div>
         <label style={labelStyle}>Calle y número</label>
         <input value={address.street} onChange={onChange('street')} placeholder="Ej. Av. Reforma 123" style={inputStyle} />
       </div>

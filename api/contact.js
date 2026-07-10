@@ -1,4 +1,4 @@
-import { insertRow, sendNotification, requireFields } from './_util.js';
+import { insertRow, sendManagerNotification, requireFields } from './_util.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    await sendNotification({
+    await sendManagerNotification({
       subject: `Nuevo mensaje de contacto — ${body.name}`,
       text: `Nombre: ${body.name}\nTeléfono: ${body.phone}\nMensaje: ${body.message || '(sin mensaje)'}`,
     });
