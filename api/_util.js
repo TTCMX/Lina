@@ -40,6 +40,29 @@ export async function queryRows(table, params) {
   return res.json();
 }
 
+export async function patchRow(table, filterParams, patch) {
+  const qs = new URLSearchParams(filterParams).toString();
+  const url = `${supabaseBaseUrl()}/rest/v1/${table}?${qs}`;
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(patch),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    const err = new Error(`Supabase patch on ${table} failed (url=${url}): ${res.status} ${detail}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
 export async function sendEmail({ to, subject, text, html, attachments }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',

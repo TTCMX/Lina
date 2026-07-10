@@ -48,6 +48,21 @@ Variables de entorno que hay que configurar en el proyecto de Vercel (**Settings
 
 Después de agregarlas, haz un redeploy en Vercel para que tomen efecto.
 
+## Back office (`/admin`)
+
+Panel protegido por contraseña en `/admin` para ver todas las reservas y mensajes de contacto, y cancelar/completar/reagendar una reserva. No está enlazado desde la navegación pública — se entra escribiendo la URL directamente.
+
+Variables de entorno adicionales:
+
+| Variable | Qué va ahí |
+|---|---|
+| `ADMIN_PASSWORD` | La contraseña para entrar a `/admin` |
+| `ADMIN_SESSION_SECRET` | Cualquier cadena larga y aleatoria (para firmar la sesión) — genera una con `openssl rand -hex 32` |
+
+Al cancelar o reagendar una reserva desde el panel, se le manda un correo al cliente avisándole.
+
+Correr `supabase/migrations/0003_booking_status_and_backoffice.sql` en el SQL editor de Supabase antes de usar el back office (agrega el campo de estado y hace que cancelar libere el horario).
+
 ## Notas
 
 - El paso de pago es solo interfaz (sin procesador de pagos real todavía) — no se guarda ni se transmite el número de tarjeta a ningún lado.

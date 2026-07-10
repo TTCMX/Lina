@@ -13,8 +13,19 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Parámetro date inválido (usa YYYY-MM-DD)' });
   }
 
+  const params = {
+    booking_date: `eq.${date}`,
+    status: 'neq.cancelled',
+    select: 'booking_time',
+  };
+
+  const excludeId = req.query.excludeId;
+  if (excludeId) {
+    params.id = `neq.${excludeId}`;
+  }
+
   try {
-    const rows = await queryRows('bookings', { booking_date: `eq.${date}`, select: 'booking_time' });
+    const rows = await queryRows('bookings', params);
     return res.status(200).json({ date, takenSlots: rows.map((r) => r.booking_time) });
   } catch (err) {
     console.error(err);

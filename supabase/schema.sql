@@ -23,13 +23,20 @@ create table if not exists bookings (
   referencias text,
   payment_type text not null,
   amount_charged int not null,
-  unique (booking_date, booking_time)
+  status text not null default 'confirmed' check (status in ('confirmed', 'completed', 'cancelled')),
+  updated_at timestamptz not null default now()
 );
 
 alter table bookings enable row level security;
 -- No policies defined on purpose: only requests using the service_role key
 -- (server-side, via the Vercel functions) can read/write. The anon/public
 -- key has zero access to this table.
+
+-- Partial unique index: only non-cancelled bookings block a slot, so
+-- cancelling one frees it up for someone else.
+create unique index if not exists bookings_date_time_active_unique
+  on bookings (booking_date, booking_time)
+  where status <> 'cancelled';
 
 create table if not exists contact_messages (
   id bigint generated always as identity primary key,

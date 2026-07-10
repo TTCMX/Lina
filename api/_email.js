@@ -115,6 +115,33 @@ export function managerBookingEmailHtml({ folio, customerName, customerPhone, cu
   });
 }
 
+export function customerCancelledEmailHtml({ customerName, folio, serviceName, sizeLabel, dateLabel, time }) {
+  return layout({
+    eyebrow: 'Reserva cancelada',
+    heading: `Hola ${customerName}`,
+    bodyHtml: 'Tu servicio con Lina fue cancelado. Si esto no era lo que esperabas o quieres agendar otra fecha, contáctanos.',
+    detailRows: [
+      ['Folio', folio],
+      ['Servicio', `${serviceName} · ${sizeLabel}`],
+      ['Fecha original', `${dateLabel}, ${time}`],
+    ],
+  });
+}
+
+export function customerRescheduledEmailHtml({ customerName, folio, serviceName, sizeLabel, dateLabel, time, street, colonia, ciudad }) {
+  return layout({
+    eyebrow: 'Reserva reagendada',
+    heading: `Hola ${customerName}`,
+    bodyHtml: 'Tu servicio con Lina cambió de fecha u hora. Aquí el resumen actualizado (adjuntamos un nuevo .ics para tu calendario):',
+    detailRows: [
+      ['Folio', folio],
+      ['Servicio', `${serviceName} · ${sizeLabel}`],
+      ['Nueva fecha', `${dateLabel}, ${time}`],
+      ['Dirección', `${street}, ${colonia}, ${ciudad}`],
+    ],
+  });
+}
+
 export function managerContactEmailHtml({ name, phone, message }) {
   return layout({
     eyebrow: 'Nuevo mensaje',
