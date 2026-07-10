@@ -1,7 +1,8 @@
 import { requireAdmin } from '../../_auth.js';
-import { patchRow, sendEmail } from '../../_util.js';
+import { patchRow, queryRows, sendEmail } from '../../_util.js';
 import { customerCancelledEmailHtml, customerRescheduledEmailHtml } from '../../_email.js';
 import { buildIcsContent } from '../../../src/utils/ics.js';
+import { releaseCoupon } from '../../_coupons.js';
 
 const VALID_STATUSES = ['confirmed', 'completed', 'cancelled'];
 
@@ -20,6 +21,12 @@ export default async function handler(req, res) {
   }
   if ((booking_date && !booking_date_label) || (!booking_date && booking_date_label)) {
     return res.status(400).json({ error: 'booking_date y booking_date_label van juntos' });
+  }
+
+  let wasAlreadyCancelled = false;
+  if (status === 'cancelled') {
+    const [existing] = await queryRows('bookings', { id: `eq.${id}`, select: 'status' });
+    wasAlreadyCancelled = existing?.status === 'cancelled';
   }
 
   const patch = { updated_at: new Date().toISOString() };
@@ -42,6 +49,10 @@ export default async function handler(req, res) {
   const booking = rows[0];
   if (!booking) {
     return res.status(404).json({ error: 'Reserva no encontrada.' });
+  }
+
+  if (status === 'cancelled' && !wasAlreadyCancelled && booking.coupon_id) {
+    await releaseCoupon(booking.coupon_id);
   }
 
   try {

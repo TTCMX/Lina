@@ -4,6 +4,7 @@ import { findService } from '../data/services';
 import { getDateOptions } from '../utils/dates';
 import { money } from '../utils/money';
 import { isValidEmail } from '../utils/email';
+import { computeDiscount } from '../utils/coupon';
 import { wizardContainer } from '../styles';
 import { DEFAULT_PAYMENT_TYPE, DEPOSIT_PERCENT } from '../config';
 import ProgressBar from './agendar/ProgressBar';
@@ -33,6 +34,9 @@ export default function Agendar() {
   const [submitError, setSubmitError] = useState(null);
   const [takenSlots, setTakenSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [coupon, setCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState(null);
 
   const dateOptions = useMemo(() => getDateOptions(), []);
 
@@ -75,8 +79,10 @@ export default function Agendar() {
   else if (step === 4) canContinue = addressValid;
   else if (step === 5) canContinue = !submitting;
 
-  const depositAmount = Math.round(subtotal * (DEPOSIT_PERCENT / 100));
-  const amountCharged = effectivePaymentType === 'deposit' ? depositAmount : subtotal;
+  const discountAmount = computeDiscount(coupon, subtotal);
+  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
+  const depositAmount = Math.round(discountedSubtotal * (DEPOSIT_PERCENT / 100));
+  const amountCharged = effectivePaymentType === 'deposit' ? depositAmount : discountedSubtotal;
   const mainButtonLabel = step === 5
     ? (submitting ? 'Conectando con Mercado Pago...' : `Ir a pagar ${money(amountCharged)}`)
     : 'Continuar';
@@ -90,6 +96,32 @@ export default function Agendar() {
     const value = e.target.value;
     setAddress((a) => ({ ...a, [field]: value }));
   };
+
+  async function handleApplyCoupon(code) {
+    if (!code.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch('/api/coupons/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim(), subtotal }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo aplicar el cupón.');
+      setCoupon({ code: data.code, type: data.type, value: data.value });
+    } catch (err) {
+      setCoupon(null);
+      setCouponError(err.message || 'No se pudo aplicar el cupón.');
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setCoupon(null);
+    setCouponError(null);
+  }
 
   async function handleNext() {
     if (step < 5) {
@@ -118,6 +150,7 @@ export default function Agendar() {
           ciudad: address.ciudad,
           referencias: address.referencias,
           paymentType: effectivePaymentType,
+          couponCode: coupon?.code,
         }),
       });
       const data = await res.json();
@@ -209,6 +242,11 @@ export default function Agendar() {
               paymentType={effectivePaymentType}
               onSelectDeposit={() => setPaymentType('deposit')}
               onSelectFull={() => setPaymentType('full')}
+              coupon={coupon}
+              onApplyCoupon={handleApplyCoupon}
+              onRemoveCoupon={handleRemoveCoupon}
+              couponLoading={couponLoading}
+              couponError={couponError}
             />
           )}
 

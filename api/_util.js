@@ -64,6 +64,34 @@ export async function patchRow(table, filterParams, patch) {
   return res.json();
 }
 
+export async function callRpc(fnName, args) {
+  const url = `${supabaseBaseUrl()}/rest/v1/rpc/${fnName}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(args),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    let message = null;
+    try {
+      message = JSON.parse(detail).message;
+    } catch {
+      // not JSON, leave message null
+    }
+    const err = new Error(`Supabase RPC ${fnName} failed: ${res.status} ${detail}`);
+    err.status = res.status;
+    err.pgMessage = message;
+    throw err;
+  }
+  return res.json();
+}
+
 export async function sendEmail({ to, subject, text, html, attachments }) {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',

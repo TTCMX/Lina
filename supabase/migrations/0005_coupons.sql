@@ -1,4 +1,4 @@
--- Run this once in the Supabase project's SQL editor.
+-- Run this in the Supabase SQL editor to add discount coupons.
 
 create table if not exists coupons (
   id bigint generated always as identity primary key,
@@ -14,56 +14,19 @@ create table if not exists coupons (
 );
 
 alter table coupons enable row level security;
--- No policies defined on purpose: only requests using the service_role key
--- (server-side, via the Vercel functions/RPCs) can read/write.
 
-create table if not exists bookings (
-  id bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  folio text not null unique,
-  service_id text not null,
-  service_name text not null,
-  size_id text not null,
-  size_label text not null,
-  qty int not null,
-  unit_price int not null,
-  subtotal int not null,
-  booking_date date not null,
-  booking_date_label text not null,
-  booking_time text not null,
-  customer_name text not null,
-  customer_phone text not null,
-  customer_email text not null,
-  street text not null,
-  colonia text not null,
-  ciudad text not null,
-  referencias text,
-  payment_type text not null,
-  amount_charged int not null,
-  status text not null default 'pending_payment' check (status in ('pending_payment', 'confirmed', 'completed', 'cancelled')),
-  updated_at timestamptz not null default now(),
-  mp_preference_id text,
-  mp_payment_id text,
-  coupon_id bigint references coupons(id),
-  coupon_code text,
-  discount_amount int not null default 0
-);
+alter table bookings
+  add column if not exists coupon_id bigint references coupons(id);
 
-alter table bookings enable row level security;
--- No policies defined on purpose: only requests using the service_role key
--- (server-side, via the Vercel functions) can read/write. The anon/public
--- key has zero access to this table.
+alter table bookings
+  add column if not exists coupon_code text;
 
--- Partial unique index: only non-cancelled bookings block a slot, so
--- cancelling one frees it up for someone else.
-create unique index if not exists bookings_date_time_active_unique
-  on bookings (booking_date, booking_time)
-  where status <> 'cancelled';
+alter table bookings
+  add column if not exists discount_amount int not null default 0;
 
--- Coupon redemption is done through these functions (not raw
--- inserts/updates) so a limited-use code can't be over-redeemed by two
--- concurrent requests: `for update` locks the coupon row for the duration
--- of the transaction, so the check-then-increment is atomic.
+-- Atomic, race-condition-safe redemption. See supabase/schema.sql for
+-- the full explanation of why this is a Postgres function rather than a
+-- plain update from the Vercel function.
 
 create or replace function preview_coupon(p_code text, p_subtotal numeric)
 returns table(code text, type text, value numeric, discount_amount numeric)
@@ -133,13 +96,3 @@ language sql
 as $$
   update coupons set used_count = greatest(0, used_count - 1) where id = p_coupon_id;
 $$;
-
-create table if not exists contact_messages (
-  id bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  name text not null,
-  phone text not null,
-  message text
-);
-
-alter table contact_messages enable row level security;

@@ -88,6 +88,14 @@ Correr `supabase/migrations/0004_mercadopago_payments.sql` en Supabase antes de 
 
 **Limitación conocida:** si un cliente llega hasta la pantalla de pago y abandona sin pagar (cierra la pestaña, no completa la tarjeta), esa reserva se queda en `pending_payment` y el horario sigue apartado indefinidamente — no hay limpieza automática todavía. Desde el back office puedes cancelarla manualmente para liberar el horario (filtro "Pago pendiente").
 
+## Cupones de descuento
+
+Desde `/admin` → pestaña **Cupones** puedes crear códigos de porcentaje (ej. 10%) o monto fijo (ej. $100), con límite de usos y/o fecha de expiración opcionales. En el paso de pago del wizard, el cliente puede meter un código antes de pagar.
+
+El descuento se calcula y se "cobra" (redime) en el servidor cuando se crea la reserva — nunca se confía en el monto que mande el navegador. Si después la reserva se cancela (el cliente no completa el pago, se cancela desde el back office, etc.), el cupón se libera automáticamente y su uso vuelve a estar disponible.
+
+Correr `supabase/migrations/0005_coupons.sql` en Supabase antes de usar esto.
+
 ## Notas
 
 - Precios, depósito (%) y disponibilidad de recolección en taller están en `src/config.js` y `src/data/services.js`.

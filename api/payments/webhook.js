@@ -1,6 +1,7 @@
 import { queryRows, patchRow } from '../_util.js';
 import { getPayment, verifyWebhookSignature } from '../_mercadopago.js';
 import { notifyBookingConfirmed } from '../_notify.js';
+import { releaseCoupon } from '../_coupons.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -74,6 +75,7 @@ export default async function handler(req, res) {
         { id: `eq.${booking.id}` },
         { status: 'cancelled', mp_payment_id: String(payment.id), updated_at: new Date().toISOString() }
       );
+      if (booking.coupon_id) await releaseCoupon(booking.coupon_id);
     } else {
       // pending / in_process / authorized / etc — leave as pending_payment,
       // just record the payment id for traceability.

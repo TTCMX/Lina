@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import BookingCard from './BookingCard';
+import CouponsPanel from './CouponsPanel';
 
 const STATUS_FILTERS = [
   { id: 'all', label: 'Todas' },
@@ -49,7 +50,7 @@ export default function AdminDashboard({ onLoggedOut }) {
 
   useEffect(() => {
     if (tab === 'bookings') loadBookings();
-    else loadMessages();
+    else if (tab === 'messages') loadMessages();
   }, [tab]);
 
   async function handleLogout() {
@@ -94,6 +95,12 @@ export default function AdminDashboard({ onLoggedOut }) {
           >
             Mensajes de contacto
           </button>
+          <button
+            onClick={() => setTab('coupons')}
+            style={tabButtonStyle(tab === 'coupons')}
+          >
+            Cupones
+          </button>
         </div>
 
         {tab === 'bookings' && (
@@ -119,13 +126,15 @@ export default function AdminDashboard({ onLoggedOut }) {
           </div>
         )}
 
-        {error && (
+        {tab !== 'coupons' && error && (
           <div style={{ marginBottom: 16, fontSize: 14, color: 'oklch(0.5 0.18 25)', background: 'oklch(0.96 0.03 25)', padding: '12px 14px', borderRadius: 10 }}>
             {error}
           </div>
         )}
 
-        {loading ? (
+        {tab === 'coupons' ? (
+          <CouponsPanel />
+        ) : loading ? (
           <div style={{ color: 'var(--color-text-muted-3)' }}>Cargando...</div>
         ) : tab === 'bookings' ? (
           visibleBookings.length === 0 ? (

@@ -1,5 +1,6 @@
 import { insertRow, patchRow, requireFields } from './_util.js';
 import { createPreference } from './_mercadopago.js';
+import { redeemCoupon, releaseCoupon, couponErrorMessage } from './_coupons.js';
 import { findService } from '../src/data/services.js';
 import { DEPOSIT_PERCENT } from '../src/config.js';
 
@@ -37,8 +38,24 @@ export default async function handler(req, res) {
 
   const unitPrice = size.price;
   const subtotal = unitPrice * qty;
-  const depositAmount = Math.round(subtotal * (DEPOSIT_PERCENT / 100));
-  const amountCharged = body.paymentType === 'deposit' ? depositAmount : subtotal;
+
+  let coupon = null;
+  if (body.couponCode) {
+    try {
+      coupon = await redeemCoupon(body.couponCode, subtotal);
+    } catch (err) {
+      if (err.pgMessage) {
+        return res.status(400).json({ error: couponErrorMessage(err) });
+      }
+      console.error(err);
+      return res.status(500).json({ error: 'No se pudo aplicar el cupón.' });
+    }
+  }
+
+  const discountAmount = coupon ? Math.min(Math.round(coupon.discount_amount), subtotal) : 0;
+  const discountedSubtotal = subtotal - discountAmount;
+  const depositAmount = Math.round(discountedSubtotal * (DEPOSIT_PERCENT / 100));
+  const amountCharged = body.paymentType === 'deposit' ? depositAmount : discountedSubtotal;
 
   const folio = 'LN-' + Math.floor(100000 + Math.random() * 900000);
 
@@ -66,9 +83,13 @@ export default async function handler(req, res) {
       payment_type: body.paymentType,
       amount_charged: amountCharged,
       status: 'pending_payment',
+      coupon_id: coupon?.coupon_id || null,
+      coupon_code: coupon?.code || null,
+      discount_amount: discountAmount,
     }, { returning: true });
   } catch (err) {
     console.error(err);
+    if (coupon) await releaseCoupon(coupon.coupon_id);
     if (err.status === 409) {
       return res.status(409).json({ error: 'Ese horario ya no está disponible. Elige otra fecha u hora.' });
     }
@@ -102,6 +123,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ folio, checkoutUrl: preference.init_point });
   } catch (err) {
     console.error('Booking saved but Mercado Pago preference failed, releasing slot:', err);
+    if (coupon) await releaseCoupon(coupon.coupon_id);
     try {
       await patchRow('bookings', { id: `eq.${booking.id}` }, { status: 'cancelled' });
     } catch (releaseErr) {
