@@ -1,5 +1,9 @@
+function supabaseBaseUrl() {
+  return (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+}
+
 export async function insertRow(table, row) {
-  const url = `${process.env.SUPABASE_URL}/rest/v1/${table}`;
+  const url = `${supabaseBaseUrl()}/rest/v1/${table}`;
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -13,7 +17,7 @@ export async function insertRow(table, row) {
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '');
-    throw new Error(`Supabase insert into ${table} failed: ${res.status} ${detail}`);
+    throw new Error(`Supabase insert into ${table} failed (url=${url}): ${res.status} ${detail}`);
   }
 }
 
