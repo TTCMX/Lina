@@ -49,14 +49,13 @@ export default function Agendar() {
 
   const customerValid = customer.name.trim().length > 1 && customer.phone.trim().length >= 8;
   const addressValid = customerValid && address.street.trim().length > 2 && address.colonia.trim().length > 1 && address.ciudad.trim().length > 1;
-  const cardValid = card.number.trim().length >= 12 && card.exp.trim().length >= 4 && card.cvc.trim().length >= 3 && card.name.trim().length > 2;
 
   let canContinue = false;
   if (step === 1) canContinue = !!serviceId;
   else if (step === 2) canContinue = !!sizeId;
   else if (step === 3) canContinue = !!selectedDate && !!selectedTime;
   else if (step === 4) canContinue = addressValid;
-  else if (step === 5) canContinue = cardValid && !submitting;
+  else if (step === 5) canContinue = !submitting;
 
   const depositAmount = Math.round(subtotal * (DEPOSIT_PERCENT / 100));
   const amountCharged = effectivePaymentType === 'deposit' ? depositAmount : subtotal;
