@@ -24,14 +24,24 @@ export function isSlotBookable(dateKey, time, now = new Date()) {
   return slotStartInstant(dateKey, time).getTime() - now.getTime() >= BOOKING_LEAD_HOURS * 60 * 60 * 1000;
 }
 
+// Local calendar date, not UTC — d.toISOString() would silently roll over
+// to the next day for anyone west of UTC (all of Mexico) during their own
+// evening, desyncing the key from the weekday/dayNum/month shown right next
+// to it and from what isSlotBookable() actually checks.
+function toDateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function getDateOptions(today = new Date(), count = 14) {
   const options = [];
   for (let i = 0; i < count; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() + i);
-    const key = d.toISOString().slice(0, 10);
     options.push({
-      key,
+      key: toDateKey(d),
       weekday: WEEKDAYS[d.getDay()],
       dayNum: d.getDate(),
       month: MONTHS[d.getMonth()],
