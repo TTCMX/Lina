@@ -10,7 +10,6 @@ export default function PaymentReturn({ outcome }) {
   const navigate = useNavigate();
   const folio = searchParams.get('folio');
   const [booking, setBooking] = useState(null);
-  const [gaveUp, setGaveUp] = useState(false);
 
   useEffect(() => {
     if (!folio || outcome === 'failure') return undefined;
@@ -31,10 +30,7 @@ export default function PaymentReturn({ outcome }) {
         // transient network hiccup — just retry
       }
       attempts += 1;
-      if (attempts >= MAX_POLLS) {
-        setGaveUp(true);
-        return;
-      }
+      if (attempts >= MAX_POLLS) return;
       setTimeout(tick, POLL_INTERVAL_MS);
     }
 
@@ -47,7 +43,7 @@ export default function PaymentReturn({ outcome }) {
   return (
     <div data-screen-label="PagoResultado" style={{ ...wizardContainer, padding: '60px 0 100px', animation: 'lina-fade-up 0.4s ease both' }}>
       <div style={{ ...card, padding: '36px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 14 }}>
-        {renderContent({ outcome, booking, gaveUp, folio })}
+        {renderContent({ outcome, booking, folio })}
         <button onClick={() => navigate('/')} style={{ ...primaryButton, marginTop: 10 }}>
           Volver al inicio
         </button>
@@ -61,7 +57,7 @@ export default function PaymentReturn({ outcome }) {
   );
 }
 
-function renderContent({ outcome, booking, gaveUp, folio }) {
+function renderContent({ outcome, booking, folio }) {
   if (outcome === 'failure') {
     return (
       <>
@@ -109,21 +105,17 @@ function renderContent({ outcome, booking, gaveUp, folio }) {
     );
   }
 
-  if (gaveUp) {
-    return (
-      <>
-        <Icon variant="pending" />
-        <h1 style={titleStyle}>Tu pago se está procesando</h1>
-        <p style={textStyle}>Está tardando más de lo normal, pero en cuanto se confirme te llega un correo con los detalles{folio ? ` (folio ${folio})` : ''}.</p>
-      </>
-    );
-  }
-
+  // Mercado Pago already redirected here with a successful payment, so the
+  // customer should feel done — the only thing we're waiting on is our own
+  // webhook confirming and sending the email, which is invisible to them.
   return (
     <>
-      <Icon variant="pending" />
-      <h1 style={titleStyle}>Confirmando tu pago...</h1>
-      <p style={textStyle}>Esto toma solo unos segundos.</p>
+      <Icon variant="success" />
+      <h1 style={titleStyle}>¡Tu reserva está confirmada!</h1>
+      <p style={textStyle}>
+        Recibirás un correo en unos minutos con el resumen completo y un archivo para tu calendario
+        {folio ? ` (folio ${folio})` : ''}.
+      </p>
     </>
   );
 }
