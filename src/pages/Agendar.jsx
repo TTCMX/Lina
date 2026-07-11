@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { findService } from '../data/services';
+import { findService, computeExtrasBreakdown, sumExtras } from '../data/services';
 import { getDateOptions } from '../utils/dates';
 import { money } from '../utils/money';
 import { isValidEmail } from '../utils/email';
 import { computeDiscount } from '../utils/coupon';
+import { computeDepositAmount } from '../utils/pricing';
 import { wizardContainer } from '../styles';
-import { DEFAULT_PAYMENT_TYPE, DEPOSIT_PERCENT } from '../config';
+import { DEFAULT_PAYMENT_TYPE } from '../config';
 import ProgressBar from './agendar/ProgressBar';
 import StepService from './agendar/StepService';
 import StepDetails from './agendar/StepDetails';
@@ -25,6 +26,7 @@ export default function Agendar() {
   const [serviceId, setServiceId] = useState(initialServiceId);
   const [sizeId, setSizeId] = useState(null);
   const [qty, setQty] = useState(1);
+  const [extras, setExtras] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [customer, setCustomer] = useState(EMPTY_CUSTOMER);
@@ -63,7 +65,10 @@ export default function Agendar() {
 
   const service = findService(serviceId);
   const selectedSize = service ? service.sizes.find((z) => z.id === sizeId) : null;
-  const subtotal = selectedSize ? selectedSize.price * qty : 0;
+  const serviceSubtotal = selectedSize ? selectedSize.price * qty : 0;
+  const extrasBreakdown = computeExtrasBreakdown(extras, qty);
+  const extrasAmount = sumExtras(extrasBreakdown);
+  const subtotal = serviceSubtotal + extrasAmount;
   const selectedDateObj = dateOptions.find((d) => d.key === selectedDate);
   const selectedDateLabel = selectedDateObj ? `${selectedDateObj.weekday} ${selectedDateObj.dayNum} ${selectedDateObj.month}` : '';
 
@@ -81,7 +86,7 @@ export default function Agendar() {
 
   const discountAmount = computeDiscount(coupon, subtotal);
   const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const depositAmount = Math.round(discountedSubtotal * (DEPOSIT_PERCENT / 100));
+  const depositAmount = computeDepositAmount(discountedSubtotal);
   const amountCharged = effectivePaymentType === 'deposit' ? depositAmount : discountedSubtotal;
   const mainButtonLabel = step === 5
     ? (submitting ? 'Conectando con Mercado Pago...' : `Ir a pagar ${money(amountCharged)}`)
@@ -139,6 +144,7 @@ export default function Agendar() {
           serviceId: service.id,
           sizeId: selectedSize.id,
           qty,
+          extras,
           date: selectedDate,
           dateLabel: selectedDateLabel,
           time: selectedTime,
@@ -176,10 +182,16 @@ export default function Agendar() {
   function handleSelectService(id) {
     setServiceId(id);
     setSizeId(null);
+    setQty(1);
+    setExtras([]);
   }
 
   function handleSelectSize(id) {
     setSizeId(id);
+  }
+
+  function handleToggleExtra(id) {
+    setExtras((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
   }
 
   return (
@@ -198,6 +210,8 @@ export default function Agendar() {
               qty={qty}
               onInc={() => setQty((q) => Math.min(10, q + 1))}
               onDec={() => setQty((q) => Math.max(1, q - 1))}
+              extras={extras}
+              onToggleExtra={handleToggleExtra}
             />
           )}
 
@@ -233,10 +247,13 @@ export default function Agendar() {
                 serviceName: service ? service.name : '',
                 sizeLabel: selectedSize ? selectedSize.label : '',
                 qty,
+                qtyUnit: service ? service.unit : 'servicio',
                 dateLabel: selectedDateLabel,
                 time: selectedTime,
                 street: address.street,
                 colonia: address.colonia,
+                serviceSubtotal,
+                extrasBreakdown,
                 subtotal,
               }}
               paymentType={effectivePaymentType}

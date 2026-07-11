@@ -79,14 +79,28 @@ function layout({ eyebrow, heading, bodyHtml, detailRows }) {
 </html>`;
 }
 
-export function customerBookingEmailHtml({ customerName, folio, serviceName, sizeLabel, qty, dateLabel, time, street, colonia, ciudad, paymentLine }) {
+function qtyUnitSuffix(qtyUnit) {
+  if (qtyUnit === 'm2') return ' m²';
+  if (qtyUnit === 'plaza') return ' plazas';
+  return '';
+}
+
+function extrasRows(extras) {
+  if (!extras || !extras.length) return [];
+  return extras.map((e) => [e.label + (e.applications > 1 ? ` (${e.applications}x)` : ''), `$${e.amount}`]);
+}
+
+export function customerBookingEmailHtml({ customerName, folio, serviceName, sizeLabel, qty, qtyUnit, extras, dateLabel, time, street, colonia, ciudad, paymentLine, workshopPickup }) {
   return layout({
     eyebrow: 'Reserva confirmada',
     heading: `¡Hola ${customerName}!`,
-    bodyHtml: 'Tu servicio con Lina quedó agendado. Aquí el resumen, guárdalo por si lo necesitas:',
+    bodyHtml: workshopPickup
+      ? 'Tu servicio con Lina quedó agendado. Por el tamaño del trabajo, lo recogemos y lavamos en nuestro centro de trabajo, y te lo entregamos de vuelta. Aquí el resumen, guárdalo por si lo necesitas:'
+      : 'Tu servicio con Lina quedó agendado. Aquí el resumen, guárdalo por si lo necesitas:',
     detailRows: [
       ['Folio', folio],
-      ['Servicio', `${serviceName} · ${sizeLabel} x${qty}`],
+      ['Servicio', `${serviceName} · ${sizeLabel} x${qty}${qtyUnitSuffix(qtyUnit)}`],
+      ...extrasRows(extras),
       ['Fecha', `${dateLabel}, ${time}`],
       ['Dirección', `${street}, ${colonia}, ${ciudad}`],
       ['Pago', paymentLine],
@@ -94,16 +108,18 @@ export function customerBookingEmailHtml({ customerName, folio, serviceName, siz
   });
 }
 
-export function managerBookingEmailHtml({ folio, customerName, customerPhone, customerEmail, serviceName, sizeLabel, qty, dateLabel, time, street, colonia, ciudad, referencias, paymentLine }) {
+export function managerBookingEmailHtml({ folio, customerName, customerPhone, customerEmail, serviceName, sizeLabel, qty, qtyUnit, extras, dateLabel, time, street, colonia, ciudad, referencias, paymentLine, workshopPickup }) {
   const rows = [
     ['Folio', folio],
     ['Cliente', `${customerName}`],
     ['Teléfono', customerPhone],
     ['Correo', customerEmail],
-    ['Servicio', `${serviceName} · ${sizeLabel} x${qty}`],
+    ['Servicio', `${serviceName} · ${sizeLabel} x${qty}${qtyUnitSuffix(qtyUnit)}`],
+    ...extrasRows(extras),
     ['Fecha', `${dateLabel}, ${time}`],
     ['Dirección', `${street}, ${colonia}, ${ciudad}`],
   ];
+  if (workshopPickup) rows.push(['Logística', 'Se recoge en centro de trabajo']);
   if (referencias) rows.push(['Referencias', referencias]);
   rows.push(['Pago', paymentLine]);
 

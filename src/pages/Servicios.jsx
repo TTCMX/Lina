@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { SERVICES } from '../data/services';
+import { SERVICES, unitSuffix } from '../data/services';
 import { money } from '../utils/money';
 import { container, eyebrow, card } from '../styles';
 
@@ -45,7 +45,10 @@ export default function Servicios() {
                 <div key={sz.id} style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: 14, background: 'var(--color-surface)' }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{sz.label}</div>
                   <div style={{ fontSize: 12, color: 'var(--color-text-muted-3)', margin: '2px 0 8px' }}>{sz.desc}</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-primary)' }}>{money(sz.price)}</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-primary)' }}>
+                    {money(sz.price)}
+                    {unitSuffix(svc.unit)}
+                  </div>
                 </div>
               ))}
             </div>

@@ -2,8 +2,8 @@ import { insertRow, patchRow, queryRows, requireFields } from './_util.js';
 import { createPreference } from './_mercadopago.js';
 import { confirmPaymentById } from './_confirm.js';
 import { redeemCoupon, releaseCoupon, couponErrorMessage } from './_coupons.js';
-import { findService } from '../src/data/services.js';
-import { DEPOSIT_PERCENT } from '../src/config.js';
+import { findService, computeExtrasBreakdown, sumExtras } from '../src/data/services.js';
+import { computeDepositAmount } from '../src/utils/pricing.js';
 
 const REQUIRED_FIELDS = [
   'serviceId', 'sizeId', 'qty',
@@ -42,7 +42,11 @@ export default async function handler(req, res) {
   const qty = Math.min(10, Math.max(1, Math.round(Number(body.qty)) || 1));
 
   const unitPrice = size.price;
-  const subtotal = unitPrice * qty;
+  const serviceSubtotal = unitPrice * qty;
+  const extrasBreakdown = computeExtrasBreakdown(Array.isArray(body.extras) ? body.extras : [], qty);
+  const extrasAmount = sumExtras(extrasBreakdown);
+  const subtotal = serviceSubtotal + extrasAmount;
+  const workshopPickup = !!(service.workshopThreshold && qty > service.workshopThreshold);
 
   let coupon = null;
   if (body.couponCode) {
@@ -59,7 +63,7 @@ export default async function handler(req, res) {
 
   const discountAmount = coupon ? Math.min(Math.round(coupon.discount_amount), subtotal) : 0;
   const discountedSubtotal = subtotal - discountAmount;
-  const depositAmount = Math.round(discountedSubtotal * (DEPOSIT_PERCENT / 100));
+  const depositAmount = computeDepositAmount(discountedSubtotal);
   const amountCharged = body.paymentType === 'deposit' ? depositAmount : discountedSubtotal;
 
   const folio = 'LN-' + Math.floor(100000 + Math.random() * 900000);
@@ -73,8 +77,12 @@ export default async function handler(req, res) {
       size_id: size.id,
       size_label: size.label,
       qty,
+      qty_unit: service.unit,
       unit_price: unitPrice,
       subtotal,
+      extras: extrasBreakdown,
+      extras_amount: extrasAmount,
+      workshop_pickup: workshopPickup,
       booking_date: body.date,
       booking_date_label: body.dateLabel,
       booking_time: body.time,
@@ -107,7 +115,7 @@ export default async function handler(req, res) {
     const preference = await createPreference({
       items: [
         {
-          title: `Lina — ${service.name} (${size.label}) x${qty}`,
+          title: `Lina — ${service.name} (${size.label}) x${qty}${extrasAmount ? ' + extras' : ''}`,
           quantity: 1,
           unit_price: amountCharged,
           currency_id: 'MXN',

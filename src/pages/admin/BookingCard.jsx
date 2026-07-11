@@ -105,10 +105,17 @@ export default function BookingCard({ booking, onUpdated, onError }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, fontSize: 14, marginBottom: 12 }}>
         <Field label="Cliente" value={`${booking.customer_name} · ${booking.customer_phone}`} />
         <Field label="Correo" value={booking.customer_email} />
-        <Field label="Servicio" value={`${booking.service_name} · ${booking.size_label} x${booking.qty}`} />
+        <Field label="Servicio" value={`${booking.service_name} · ${booking.size_label} x${booking.qty}${qtyUnitSuffix(booking.qty_unit)}`} />
         <Field label="Fecha" value={`${booking.booking_date_label}, ${booking.booking_time}`} />
         <Field label="Dirección" value={`${booking.street}, ${booking.colonia}, ${booking.ciudad}`} />
         <Field label="Pago" value={`${booking.payment_type === 'deposit' ? 'Depósito' : 'Completo'} · ${money(booking.amount_charged)}`} />
+        {booking.extras?.length > 0 && (
+          <Field
+            label="Extras"
+            value={`${booking.extras.map((e) => e.label).join(', ')} (${money(booking.extras_amount)})`}
+          />
+        )}
+        {booking.workshop_pickup && <Field label="Logística" value="Se recoge en centro de trabajo" />}
         {booking.referencias && <Field label="Referencias" value={booking.referencias} />}
       </div>
 
@@ -192,6 +199,12 @@ export default function BookingCard({ booking, onUpdated, onError }) {
       )}
     </div>
   );
+}
+
+function qtyUnitSuffix(qtyUnit) {
+  if (qtyUnit === 'm2') return ' m²';
+  if (qtyUnit === 'plaza') return ' plazas';
+  return '';
 }
 
 function Field({ label, value }) {

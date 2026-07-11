@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { money } from '../../utils/money';
 import { computeDiscount } from '../../utils/coupon';
+import { computeDepositAmount } from '../../utils/pricing';
 import { card, inputStyle } from '../../styles';
 import { DEPOSIT_PERCENT } from '../../config';
+
+function qtyUnitLabel(qtyUnit, qty) {
+  if (qtyUnit === 'm2') return 'm²';
+  if (qtyUnit === 'plaza') return qty === 1 ? 'plaza' : 'plazas';
+  return qty === 1 ? 'unidad' : 'unidades';
+}
 
 export default function StepPayment({
   summary, paymentType, onSelectDeposit, onSelectFull,
@@ -13,7 +20,9 @@ export default function StepPayment({
   const isFull = paymentType === 'full';
   const discountAmount = computeDiscount(coupon, summary.subtotal);
   const discountedSubtotal = Math.max(0, summary.subtotal - discountAmount);
-  const depositAmount = Math.round(discountedSubtotal * (DEPOSIT_PERCENT / 100));
+  const depositAmount = computeDepositAmount(discountedSubtotal);
+  const qtyDisplay = `${summary.qty} ${qtyUnitLabel(summary.qtyUnit, summary.qty)}`;
+  const extrasBreakdown = summary.extrasBreakdown || [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -24,7 +33,15 @@ export default function StepPayment({
       <div style={{ ...card, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Row label="Cliente" value={`${summary.customerName} · ${summary.customerPhone}`} alignRight />
         <Row label="Servicio" value={`${summary.serviceName} · ${summary.sizeLabel}`} />
-        <Row label="Cantidad" value={summary.qty} />
+        <Row label="Cantidad" value={qtyDisplay} />
+        <Row label="Subtotal servicio" value={money(summary.serviceSubtotal)} />
+        {extrasBreakdown.map((extra) => (
+          <Row
+            key={extra.id}
+            label={extra.label + (extra.applications > 1 ? ` (${extra.applications}x)` : '')}
+            value={money(extra.amount)}
+          />
+        ))}
         <Row label="Fecha" value={`${summary.dateLabel}, ${summary.time}`} />
         <Row label="Dirección" value={`${summary.street}, ${summary.colonia}`} alignRight />
         {coupon && <Row label={`Cupón ${coupon.code}`} value={`-${money(discountAmount)}`} />}

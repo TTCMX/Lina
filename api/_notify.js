@@ -15,6 +15,9 @@ export async function notifyBookingConfirmed(booking) {
     serviceName: booking.service_name,
     sizeLabel: booking.size_label,
     qty: booking.qty,
+    qtyUnit: booking.qty_unit,
+    extras: booking.extras,
+    workshopPickup: booking.workshop_pickup,
     dateLabel: booking.booking_date_label,
     time: booking.booking_time,
     street: booking.street,
@@ -24,6 +27,10 @@ export async function notifyBookingConfirmed(booking) {
     paymentLine,
   };
 
+  const extrasLine = (booking.extras || []).length
+    ? `Extras: ${booking.extras.map((e) => `${e.label} ($${e.amount})`).join(', ')}`
+    : null;
+
   try {
     await sendManagerNotification({
       subject: `Nueva reserva ${booking.folio} — ${booking.service_name}`,
@@ -31,8 +38,10 @@ export async function notifyBookingConfirmed(booking) {
         `Folio: ${booking.folio}`,
         `Cliente: ${booking.customer_name} — ${booking.customer_phone} — ${booking.customer_email}`,
         `Servicio: ${booking.service_name} · ${booking.size_label} x${booking.qty}`,
+        extrasLine,
         `Fecha: ${booking.booking_date_label}, ${booking.booking_time}`,
         `Dirección: ${booking.street}, ${booking.colonia}, ${booking.ciudad}`,
+        booking.workshop_pickup ? 'Logística: se recoge en centro de trabajo' : null,
         booking.referencias ? `Referencias: ${booking.referencias}` : null,
         `Pago: ${paymentLine}`,
       ].filter(Boolean).join('\n'),
@@ -63,15 +72,17 @@ export async function notifyBookingConfirmed(booking) {
         '',
         `Folio: ${booking.folio}`,
         `Servicio: ${booking.service_name} · ${booking.size_label} x${booking.qty}`,
+        extrasLine,
         `Fecha: ${booking.booking_date_label}, ${booking.booking_time}`,
         `Dirección: ${booking.street}, ${booking.colonia}, ${booking.ciudad}`,
+        booking.workshop_pickup ? 'Por el tamaño del trabajo, lo recogemos y lavamos en nuestro centro de trabajo, y te lo entregamos de vuelta.' : null,
         paymentLine,
         '',
         'Adjuntamos un archivo .ics para que agregues la cita a tu calendario.',
         'Te enviaremos un recordatorio antes de la visita. Si necesitas cambiar algo, contáctanos respondiendo este correo.',
         '',
         '— Equipo Lina',
-      ].join('\n'),
+      ].filter(Boolean).join('\n'),
       html: customerBookingEmailHtml(emailData),
       attachments: [
         { filename: `lina-${booking.folio}.ics`, content: Buffer.from(icsContent).toString('base64') },
