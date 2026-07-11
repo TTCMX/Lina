@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { findService, computeExtrasBreakdown, sumExtras } from '../data/services';
-import { getDateOptions } from '../utils/dates';
+import { getDateOptions, isSlotBookable } from '../utils/dates';
 import { money } from '../utils/money';
 import { isValidEmail } from '../utils/email';
 import { computeDiscount } from '../utils/coupon';
@@ -80,7 +80,7 @@ export default function Agendar() {
   let canContinue = false;
   if (step === 1) canContinue = !!serviceId;
   else if (step === 2) canContinue = !!sizeId;
-  else if (step === 3) canContinue = !!selectedDate && !!selectedTime && !takenSlots.includes(selectedTime);
+  else if (step === 3) canContinue = !!selectedDate && !!selectedTime && !takenSlots.includes(selectedTime) && isSlotBookable(selectedDate, selectedTime);
   else if (step === 4) canContinue = addressValid;
   else if (step === 5) canContinue = !submitting;
 

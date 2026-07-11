@@ -4,6 +4,8 @@ import { confirmPaymentById } from './_confirm.js';
 import { redeemCoupon, releaseCoupon, couponErrorMessage } from './_coupons.js';
 import { findService, computeExtrasBreakdown, sumExtras } from '../src/data/services.js';
 import { computeDepositAmount } from '../src/utils/pricing.js';
+import { isSlotBookable } from '../src/utils/dates.js';
+import { BOOKING_LEAD_HOURS } from '../src/config.js';
 
 const REQUIRED_FIELDS = [
   'serviceId', 'sizeId', 'qty',
@@ -38,6 +40,9 @@ export default async function handler(req, res) {
   }
   if (!['deposit', 'full'].includes(body.paymentType)) {
     return res.status(400).json({ error: 'Forma de pago inválida.' });
+  }
+  if (!isSlotBookable(body.date, body.time)) {
+    return res.status(400).json({ error: `Necesitamos al menos ${BOOKING_LEAD_HOURS} horas de anticipación para agendar. Elige otra fecha u hora.` });
   }
   const qty = Math.min(10, Math.max(1, Math.round(Number(body.qty)) || 1));
 

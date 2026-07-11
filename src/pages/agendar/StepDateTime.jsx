@@ -1,4 +1,4 @@
-import { TIME_SLOTS } from '../../utils/dates';
+import { TIME_SLOTS, isSlotBookable } from '../../utils/dates';
 
 export default function StepDateTime({ dateOptions, selectedDate, onSelectDate, selectedTime, onSelectTime, takenSlots, loadingSlots }) {
   return (
@@ -41,13 +41,15 @@ export default function StepDateTime({ dateOptions, selectedDate, onSelectDate, 
               {TIME_SLOTS.map((t) => {
                 const isSelected = selectedTime === t;
                 const isTaken = takenSlots.includes(t);
+                const isTooSoon = !isTaken && !isSlotBookable(selectedDate, t);
+                const isDisabled = isTaken || isTooSoon;
                 return (
                   <div
                     key={t}
-                    onClick={isTaken ? undefined : () => onSelectTime(t)}
+                    onClick={isDisabled ? undefined : () => onSelectTime(t)}
                     style={{
-                      cursor: isTaken ? 'not-allowed' : 'pointer',
-                      opacity: isTaken ? 0.45 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      opacity: isDisabled ? 0.45 : 1,
                       textAlign: 'center',
                       padding: '13px 8px',
                       borderRadius: 12,
@@ -60,6 +62,7 @@ export default function StepDateTime({ dateOptions, selectedDate, onSelectDate, 
                   >
                     {t}
                     {isTaken && <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, marginTop: 2 }}>Ocupado</div>}
+                    {isTooSoon && <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, marginTop: 2 }}>No disponible</div>}
                   </div>
                 );
               })}
