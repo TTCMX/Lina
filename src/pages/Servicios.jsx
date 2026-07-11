@@ -76,11 +76,6 @@ export default function Servicios() {
           </div>
         ))}
       </div>
-
-      <div style={{ marginTop: 26, background: 'var(--color-primary-light)', borderRadius: 16, padding: '20px 22px', fontSize: 14, color: 'oklch(0.35 0.06 200)', lineHeight: 1.5 }}>
-        Todos los servicios incluyen recolección y entrega a domicilio. Algunos tapetes de gran formato se lavan en
-        nuestro centro de trabajo para un mejor resultado.
-      </div>
     </div>
   );
 }
