@@ -24,8 +24,11 @@ export const SERVICES = [
     short: 'Lavado profundo que renueva fibras y color.',
     unit: 'm2',
     qtyLabel: 'Metros cuadrados (m²)',
-    workshopThreshold: 4,
-    workshopNote: 'Los tapetes de más de 4 m² se recogen y lavan en nuestro centro de trabajo, y se entregan de vuelta a tu domicilio.',
+    // Counter-intuitive on purpose: SMALL rugs are the ones that go to the
+    // workshop (easy to transport); once a rug is big enough it's cheaper
+    // and more practical to clean it on-site at the customer's home.
+    workshopThreshold: 5,
+    workshopNote: 'Los tapetes de menos de 5 m² se recogen a domicilio, se lavan en nuestro centro de trabajo y se entregan de vuelta.',
     sizes: [
       { id: 'sintetico', label: 'Sintético', desc: 'por m²', price: 300 },
       { id: 'mixto', label: 'Mixto', desc: 'por m²', price: 450 },

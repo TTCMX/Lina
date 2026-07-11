@@ -7,7 +7,7 @@ export default function StepDetails({ service, sizeId, onSelectSize, qty, onInc,
 
   const selectedSize = service.sizes.find((z) => z.id === sizeId);
   const showWorkshopNote = !!(
-    ALLOW_WORKSHOP_DROPOFF && service.workshopThreshold && qty > service.workshopThreshold
+    ALLOW_WORKSHOP_DROPOFF && service.workshopThreshold && qty < service.workshopThreshold
   );
   const serviceSubtotal = selectedSize ? selectedSize.price * qty : 0;
   const applications = applicationsFor(qty);

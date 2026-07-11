@@ -46,7 +46,7 @@ export default async function handler(req, res) {
   const extrasBreakdown = computeExtrasBreakdown(Array.isArray(body.extras) ? body.extras : [], qty);
   const extrasAmount = sumExtras(extrasBreakdown);
   const subtotal = serviceSubtotal + extrasAmount;
-  const workshopPickup = !!(service.workshopThreshold && qty > service.workshopThreshold);
+  const workshopPickup = !!(service.workshopThreshold && qty < service.workshopThreshold);
 
   let coupon = null;
   if (body.couponCode) {
