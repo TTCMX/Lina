@@ -1,7 +1,5 @@
-import { queryRows, patchRow } from '../_util.js';
-import { getPayment, verifyWebhookSignature } from '../_mercadopago.js';
-import { notifyBookingConfirmed } from '../_notify.js';
-import { releaseCoupon } from '../_coupons.js';
+import { verifyWebhookSignature } from '../_mercadopago.js';
+import { confirmPaymentById } from '../_confirm.js';
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -75,68 +73,11 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Firma inválida' });
   }
 
-  let payment;
   try {
-    payment = await getPayment(dataId);
+    const result = await confirmPaymentById(dataId);
+    console.log('[mp-webhook] processed', { dataId, resultStatus: result?.status, folio: result?.folio });
   } catch (err) {
-    console.error('[mp-webhook] failed to fetch payment from Mercado Pago:', err);
-    return res.status(500).json({ error: 'No se pudo verificar el pago.' });
-  }
-
-  console.log('[mp-webhook] payment fetched', { id: payment.id, status: payment.status, external_reference: payment.external_reference });
-
-  const bookingId = payment.external_reference;
-  if (!bookingId) {
-    console.error('[mp-webhook] payment has no external_reference, ignoring', payment.id);
-    return res.status(200).json({ ok: true });
-  }
-
-  let rows;
-  try {
-    rows = await queryRows('bookings', { id: `eq.${bookingId}`, select: '*' });
-  } catch (err) {
-    console.error('[mp-webhook] failed to look up booking:', err);
-    return res.status(500).json({ error: 'No se pudo consultar la reserva.' });
-  }
-
-  const booking = rows[0];
-  if (!booking) {
-    console.error('[mp-webhook] no booking found for external_reference', bookingId);
-    return res.status(200).json({ ok: true });
-  }
-
-  // Already in a terminal state — likely a duplicate webhook delivery.
-  // Don't re-send emails or flip status again.
-  if (booking.status === 'confirmed' || booking.status === 'cancelled') {
-    console.log('[mp-webhook] booking already in terminal state, skipping', { bookingId, status: booking.status });
-    return res.status(200).json({ ok: true });
-  }
-
-  try {
-    if (payment.status === 'approved') {
-      const [updated] = await patchRow(
-        'bookings',
-        { id: `eq.${booking.id}` },
-        { status: 'confirmed', mp_payment_id: String(payment.id), updated_at: new Date().toISOString() }
-      );
-      console.log('[mp-webhook] booking confirmed, sending notifications', { folio: updated.folio });
-      await notifyBookingConfirmed(updated);
-    } else if (['rejected', 'cancelled'].includes(payment.status)) {
-      await patchRow(
-        'bookings',
-        { id: `eq.${booking.id}` },
-        { status: 'cancelled', mp_payment_id: String(payment.id), updated_at: new Date().toISOString() }
-      );
-      if (booking.coupon_id) await releaseCoupon(booking.coupon_id);
-      console.log('[mp-webhook] booking cancelled due to payment status', payment.status);
-    } else {
-      // pending / in_process / authorized / etc — leave as pending_payment,
-      // just record the payment id for traceability.
-      await patchRow('bookings', { id: `eq.${booking.id}` }, { mp_payment_id: String(payment.id) });
-      console.log('[mp-webhook] payment still in non-terminal state', payment.status);
-    }
-  } catch (err) {
-    console.error('[mp-webhook] failed to update booking after payment webhook:', err);
+    console.error('[mp-webhook] failed to confirm payment:', err);
     return res.status(500).json({ error: 'No se pudo actualizar la reserva.' });
   }
 

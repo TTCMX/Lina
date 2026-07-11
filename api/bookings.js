@@ -1,5 +1,6 @@
 import { insertRow, patchRow, queryRows, requireFields } from './_util.js';
 import { createPreference } from './_mercadopago.js';
+import { confirmPaymentById } from './_confirm.js';
 import { redeemCoupon, releaseCoupon, couponErrorMessage } from './_coupons.js';
 import { findService } from '../src/data/services.js';
 import { DEPOSIT_PERCENT } from '../src/config.js';
@@ -138,21 +139,35 @@ export default async function handler(req, res) {
 
 async function handleStatus(req, res) {
   const folio = req.query.folio;
+  const paymentId = req.query.payment_id;
   if (!folio) {
     return res.status(400).json({ error: 'Falta el folio' });
   }
 
   try {
-    // Deliberately minimal fields — this endpoint is public/unauthenticated,
-    // so no customer PII (name/phone/email/address) goes in the response.
-    const rows = await queryRows('bookings', {
-      folio: `eq.${folio}`,
-      select: 'folio,status,booking_date_label,booking_time',
-    });
-    const booking = rows[0];
+    const rows = await queryRows('bookings', { folio: `eq.${folio}`, select: '*' });
+    let booking = rows[0];
     if (!booking) {
       return res.status(404).json({ error: 'No encontrado' });
     }
+
+    // Mercado Pago appends its own payment_id to the success/pending
+    // redirect. Don't wait around for the webhook to (maybe) arrive —
+    // actively check the payment with Mercado Pago's own API right here.
+    // confirmPaymentById re-verifies against Mercado Pago directly (not
+    // trusting anything from the query string except the id to look up),
+    // and the DB update is guarded so only one of {webhook, this} wins.
+    if (paymentId && booking.status === 'pending_payment') {
+      try {
+        const updated = await confirmPaymentById(paymentId);
+        if (updated) booking = updated;
+      } catch (err) {
+        console.error('[bookings] active payment confirm failed:', err);
+      }
+    }
+
+    // Deliberately minimal fields in the response — this endpoint is
+    // public/unauthenticated, so no customer PII goes back to the client.
     return res.status(200).json({
       folio: booking.folio,
       status: booking.status,

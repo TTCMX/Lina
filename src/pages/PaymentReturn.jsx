@@ -9,6 +9,11 @@ export default function PaymentReturn({ outcome }) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const folio = searchParams.get('folio');
+  // Mercado Pago appends its own payment id to the redirect (payment_id on
+  // Checkout Pro, collection_id on some older/legacy flows) — pass it along
+  // so the backend can actively verify the payment instead of only waiting
+  // for its webhook to arrive.
+  const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id');
   const [booking, setBooking] = useState(null);
 
   useEffect(() => {
@@ -19,7 +24,8 @@ export default function PaymentReturn({ outcome }) {
     async function tick() {
       if (cancelled) return;
       try {
-        const res = await fetch(`/api/bookings?folio=${folio}`);
+        const qs = new URLSearchParams({ folio, ...(paymentId ? { payment_id: paymentId } : {}) });
+        const res = await fetch(`/api/bookings?${qs}`);
         const data = await res.json();
         if (cancelled) return;
         if (res.ok) {
@@ -38,7 +44,7 @@ export default function PaymentReturn({ outcome }) {
     return () => {
       cancelled = true;
     };
-  }, [folio, outcome]);
+  }, [folio, paymentId, outcome]);
 
   return (
     <div data-screen-label="PagoResultado" style={{ ...wizardContainer, padding: '60px 0 100px', animation: 'lina-fade-up 0.4s ease both' }}>
