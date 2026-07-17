@@ -1,6 +1,7 @@
 import { insertRow, patchRow, queryRows, requireFields } from './_util.js';
 import { createPreference } from './_mercadopago.js';
 import { confirmPaymentById } from './_confirm.js';
+import { notifyBookingConfirmed } from './_notify.js';
 import { redeemCoupon, releaseCoupon, couponErrorMessage } from './_coupons.js';
 import { findService, computeExtrasBreakdown, sumExtras } from '../src/data/services.js';
 import { computeDepositAmount } from '../src/utils/pricing.js';
@@ -72,6 +73,10 @@ export default async function handler(req, res) {
   const amountCharged = body.paymentType === 'deposit' ? depositAmount : discountedSubtotal;
 
   const folio = 'LN-' + Math.floor(100000 + Math.random() * 900000);
+  // A 100%-off coupon (or a discount that happens to wipe out the deposit)
+  // can leave nothing to charge. Mercado Pago rejects a $0 preference, so
+  // skip checkout entirely and confirm the booking outright in that case.
+  const isFree = amountCharged <= 0;
 
   let booking;
   try {
@@ -100,7 +105,7 @@ export default async function handler(req, res) {
       referencias: body.referencias || null,
       payment_type: body.paymentType,
       amount_charged: amountCharged,
-      status: 'pending_payment',
+      status: isFree ? 'confirmed' : 'pending_payment',
       coupon_id: coupon?.coupon_id || null,
       coupon_code: coupon?.code || null,
       discount_amount: discountAmount,
@@ -115,6 +120,15 @@ export default async function handler(req, res) {
   }
 
   const siteUrl = process.env.SITE_URL.replace(/\/+$/, '');
+
+  if (isFree) {
+    try {
+      await notifyBookingConfirmed(booking);
+    } catch (err) {
+      console.error('Free booking confirmed but notification failed:', err);
+    }
+    return res.status(200).json({ folio, checkoutUrl: `${siteUrl}/agendar/pago-exitoso?folio=${folio}` });
+  }
 
   try {
     const preference = await createPreference({

@@ -3,9 +3,11 @@ import { customerBookingEmailHtml, managerBookingEmailHtml } from './_email.js';
 import { buildIcsContent } from '../src/utils/ics.js';
 
 export async function notifyBookingConfirmed(booking) {
-  const paymentLine = booking.payment_type === 'deposit'
-    ? `Depósito pagado: $${booking.amount_charged} MXN (el resto se paga al terminar el servicio)`
-    : `Pago completo: $${booking.amount_charged} MXN`;
+  const paymentLine = booking.amount_charged <= 0
+    ? 'Cubierto por cupón — $0 MXN, nada que pagar'
+    : booking.payment_type === 'deposit'
+      ? `Depósito pagado: $${booking.amount_charged} MXN (el resto se paga al terminar el servicio)`
+      : `Pago completo: $${booking.amount_charged} MXN`;
 
   const emailData = {
     folio: booking.folio,
