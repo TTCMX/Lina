@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Checklist — Lavado de Sala</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #F0F4F8;
+    --card:     #FFFFFF;
+    --border:   rgba(0,0,0,0.09);
+    --text:     #0F172A;
+    --sub:      #64748B;
+    --muted:    #94A3B8;
+    --teal:     #1D9E75;
+    --teal-lt:  #E1F5EE;
+    --teal-mid: #9FE1CB;
+    --teal-dk:  #0F6E56;
+    --amber:    #B45309;
+    --amber-lt: #FEF3C7;
+    --green:    #10B981;
+    --green-lt: #D1FAE5;
+    --done-line:#CBD5E1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:       #0F172A;
+      --card:     #1E293B;
+      --border:   rgba(255,255,255,0.08);
+      --text:     #F1F5F9;
+      --sub:      #94A3B8;
+      --muted:    #475569;
+      --teal:     #34D399;
+      --teal-lt:  #064E3B;
+      --teal-mid: #065F46;
+      --teal-dk:  #6EE7B7;
+      --amber:    #FCD34D;
+      --amber-lt: #451A03;
+      --green:    #34D399;
+      --green-lt: #064E3B;
+      --done-line:#334155;
+    }
+  }
+
+  html { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  body { min-height: 100vh; background: var(--bg); padding: 0; }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 1rem 0.85rem 3rem; }
+
+  /* Header */
+  .hdr { padding: 1.25rem 0 1rem; }
+  .hdr-logo { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--teal); text-transform: uppercase; margin-bottom: 4px; }
+  .hdr-title { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .hdr-sub { font-size: 13px; color: var(--sub); margin-top: 4px; }
+
+  /* Progress */
+  .prog-wrap { margin: 1rem 0 1.5rem; }
+  .prog-bar { background: var(--border); border-radius: 99px; height: 7px; overflow: hidden; margin-bottom: 6px; }
+  .prog-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.35s ease; width: 0%; }
+  .prog-meta { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--sub); }
+  .prog-pct { font-weight: 600; color: var(--teal); }
+
+  /* Section card */
+  .sec { background: var(--card); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 0.85rem; overflow: hidden; }
+
+  .sec-head { display: flex; align-items: center; gap: 9px; padding: 0.75rem 1rem; border-left: 3.5px solid var(--teal); }
+  .sec-num { font-size: 10.5px; font-weight: 700; color: var(--teal-dk); background: var(--teal-lt); padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+  .sec-title { font-size: 14.5px; font-weight: 600; color: var(--text); flex: 1; }
+  .sec-time { font-size: 11.5px; color: var(--sub); flex-shrink: 0; }
+  .sec-cnt { font-size: 11.5px; color: var(--muted); flex-shrink: 0; min-width: 30px; text-align: right; }
+  .sec-cnt.full { color: var(--teal); font-weight: 600; }
+
+  /* Row */
+  .row { display: flex; align-items: center; gap: 11px; padding: 0.8rem 1rem; border-top: 1px solid var(--border); cursor: pointer; min-height: 54px; transition: background 0.12s; -webkit-tap-highlight-color: transparent; user-select: none; }
+  .row:active { background: var(--bg); }
+  .row.crit { background: var(--amber-lt); }
+  .row.crit:active { filter: brightness(0.97); }
+
+  /* Checkbox */
+  .cb { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; background: transparent; }
+  .row.done .cb { background: var(--green); border-color: var(--green); }
+
+  /* Checkmark SVG */
+  .ck { display: none; }
+  .row.done .ck { display: block; }
+
+  .label { font-size: 13.5px; color: var(--text); line-height: 1.45; flex: 1; }
+  .row.done .label { color: var(--done-line); text-decoration: line-through; text-decoration-color: var(--done-line); }
+  .row.done.crit .label { color: var(--muted); }
+
+  .tag { flex-shrink: 0; font-size: 10.5px; font-weight: 700; color: var(--amber); background: transparent; border: 1px solid currentColor; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.04em; }
+
+  /* Done banner */
+  .done-card { display: none; background: var(--teal-lt); border: 1px solid var(--teal-mid); border-radius: 14px; padding: 1.5rem; text-align: center; margin-top: 0.5rem; }
+  .done-card.show { display: block; }
+  .done-icon { font-size: 40px; line-height: 1; margin-bottom: 8px; }
+  .done-t { font-size: 16px; font-weight: 700; color: var(--teal-dk); }
+  .done-s { font-size: 13px; color: var(--teal); margin-top: 4px; }
+
+  /* Reset button */
+  .btn-reset { width: 100%; margin-top: 1.25rem; padding: 0.8rem; font-size: 13.5px; color: var(--sub); background: var(--card); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: background 0.12s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-reset:active { background: var(--bg); }
+
+  /* Sticky progress on scroll */
+  .sticky-prog { position: sticky; top: 0; background: var(--bg); padding: 0.5rem 0 0.25rem; z-index: 10; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-logo">La Laundry · Textiles</div>
+    <div class="hdr-title">Lavado de sala</div>
+    <div class="hdr-sub">Checklist operativo para técnico de campo</div>
+  </div>
+
+  <div class="sticky-prog">
+    <div class="prog-bar"><div class="prog-fill" id="bar"></div></div>
+    <div class="prog-meta">
+      <span id="metaL">0 de 44 pasos completados</span>
+      <span class="prog-pct" id="metaR">0%</span>
+    </div>
+  </div>
+
+  <div id="secs"></div>
+
+  <div class="done-card" id="done">
+    <div class="done-icon">✅</div>
+    <div class="done-t">Servicio completado</div>
+    <div class="done-s">Dispara el rating post-servicio y ofrece upsell</div>
+  </div>
+
+  <button class="btn-reset" onclick="rst()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+    Reiniciar checklist
+  </button>
+</div>
+
+<script>
+const D = [
+  { t: "Antes de salir", h: "Previo", items: [
+    { l: "Confirmar dirección y composición de sala (piezas, plazas)" },
+    { l: "Confirmar agua, corriente y espacio disponibles con cliente" },
+    { l: "Cargar Puzzi 4/30 limpia y revisar mangueras" },
+    { l: "Verificar kit químico completo (7 productos)", c: 1 },
+    { l: "Verificar cepillo, microfibras y extensión eléctrica 10m" },
+    { l: "Enviar recordatorio de cita por WhatsApp" },
+  ]},
+  { t: "Llegada e inspección", h: "5–10 min", items: [
+    { l: "Presentarse con uniforme completo y limpio" },
+    { l: "Confirmar precio cotizado antes de iniciar" },
+    { l: "Proteger piso y objetos cercanos" },
+    { l: "Foto ANTES — pieza completa", c: 1 },
+    { l: "Foto ANTES — manchas en detalle", c: 1 },
+    { l: "Identificar material/fibra (buscar etiqueta en pieza)" },
+    { l: "Test de color en zona oculta con paño húmedo", c: 1 },
+    { l: "Manchas severas u orina → avisar ajuste de precio AHORA", c: 1 },
+  ]},
+  { t: "Preparación", h: "10–15 min", items: [
+    { l: "Retirar cojines y accesorios de la pieza" },
+    { l: "Aspirado completo: respaldo, brazos y asiento" },
+    { l: "Aspirado de costados y debajo de cojines" },
+    { l: "Aspirado de cada cojín por ambas caras" },
+    { l: "Pre-tratamiento enzimático en manchas orgánicas (5 min contacto)" },
+    { l: "Pre-tratamiento de suciedad/grasa con prelavador" },
+  ]},
+  { t: "Lavado con Puzzi", h: "20–40 min", items: [
+    { l: "Cargar tanque: shampoo baja espuma + agua" },
+    { l: "Respaldo — pasadas ordenadas de arriba a abajo" },
+    { l: "Brazo izquierdo — exterior, interior y cima" },
+    { l: "Brazo derecho — exterior, interior y cima" },
+    { l: "Asiento — pasadas traslapadas de frente a fondo" },
+    { l: "Costados y base de la pieza" },
+    { l: "Cojines — cara principal y reverso de cada uno" },
+    { l: "Pasadas de SOLO SUCCIÓN para extraer máxima humedad", c: 1 },
+  ]},
+  { t: "Neutralización", h: "5 min", items: [
+    { l: "Vaciar y enjuagar tanque Puzzi completamente" },
+    { l: "Cargar tanque: Multifibras Magno Clean + agua (3 ml/L)" },
+    { l: "Pasada final por toda la pieza + succión completa" },
+  ]},
+  { t: "Add-ons (si aplica)", h: "Opcional", items: [
+    { l: "Impermeabilización — Repel con aspersor sobre tela ligeramente húmeda" },
+    { l: "Desinfección — Bombaba spray en zonas de contacto" },
+    { l: "Tratamiento antiácaros" },
+    { l: "Neutralización de olores — enzimático spray final" },
+  ]},
+  { t: "Cierre y cobro", h: "10–15 min", items: [
+    { l: "Peinar textura con cepillo suave" },
+    { l: "Soplar con función Puzzi para acelerar secado" },
+    { l: "Colocar cojines de LADO — no acostados, para secar ambas caras" },
+    { l: "Foto DESPUÉS — pieza completa (comparativa con antes)", c: 1 },
+    { l: "Foto DESPUÉS — manchas tratadas en detalle", c: 1 },
+    { l: "Instruir al cliente: no usar 2–4 hrs, ventilar cuarto" },
+    { l: "Recibo digital + puntos de lealtad" },
+    { l: "Cobro completado" },
+    { l: "Ofrecer upsell — colchón o sillas en la misma visita" },
+  ]},
+];
+
+const TOT = D.reduce((s, sec) => s + sec.items.length, 0);
+let S = {};
+
+function tog(id) { S[id] = !S[id]; rnd(); }
+function rst() { if (confirm('¿Reiniciar checklist?')) { S = {}; rnd(); } }
+
+function done() { return Object.values(S).filter(Boolean).length; }
+
+const CHECK_SVG = `<svg class="ck" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,7 5.5,10.5 12,3"/></svg>`;
+
+function rnd() {
+  const n = done(), pct = Math.round(n / TOT * 100);
+  document.getElementById('bar').style.width = pct + '%';
+  document.getElementById('metaL').textContent = n + ' de ' + TOT + ' pasos completados';
+  document.getElementById('metaR').textContent = pct + '%';
+  document.getElementById('done').className = 'done-card' + (n === TOT ? ' show' : '');
+
+  const wrap = document.getElementById('secs');
+  wrap.innerHTML = '';
+
+  D.forEach((sec, si) => {
+    const sd = sec.items.filter((_, ii) => S[si + '_' + ii]).length;
+    const full = sd === sec.items.length;
+
+    const card = document.createElement('div');
+    card.className = 'sec';
+
+    const head = document.createElement('div');
+    head.className = 'sec-head';
+    head.innerHTML = `
+      <span class="sec-num">${si + 1}</span>
+      <span class="sec-title">${sec.t}</span>
+      <span class="sec-time">${sec.h}</span>
+      <span class="sec-cnt${full ? ' full' : ''}">${sd}/${sec.items.length}</span>
+    `;
+    card.appendChild(head);
+
+    sec.items.forEach((item, ii) => {
+      const id = si + '_' + ii;
+      const ok = !!S[id];
+      const row = document.createElement('div');
+      row.className = 'row' + (ok ? ' done' : '') + (item.c ? ' crit' : '');
+      row.setAttribute('role', 'checkbox');
+      row.setAttribute('aria-checked', ok ? 'true' : 'false');
+      row.setAttribute('tabindex', '0');
+      row.onclick = () => tog(id);
+      row.onkeydown = (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tog(id); } };
+      row.innerHTML = `<div class="cb">${CHECK_SVG}</div><span class="label">${item.l}</span>${item.c ? '<span class="tag">!</span>' : ''}`;
+      card.appendChild(row);
+    });
+
+    wrap.appendChild(card);
+  });
+}
+
+rnd();
+</script>
+</body>
+</html>
