@@ -6,7 +6,7 @@ import { redeemCoupon, releaseCoupon, couponErrorMessage } from './_coupons.js';
 import { findService, computeExtrasBreakdown, sumExtras } from '../src/data/services.js';
 import { computeDepositAmount } from '../src/utils/pricing.js';
 import { isSlotBookable } from '../src/utils/dates.js';
-import { BOOKING_LEAD_HOURS } from '../src/config.js';
+import { BOOKING_LEAD_HOURS, MIN_SUBTOTAL } from '../src/config.js';
 
 const REQUIRED_FIELDS = [
   'serviceId', 'sizeId', 'qty',
@@ -53,6 +53,13 @@ export default async function handler(req, res) {
   const extrasAmount = sumExtras(extrasBreakdown);
   const subtotal = serviceSubtotal + extrasAmount;
   const workshopPickup = !!(service.workshopThreshold && qty < service.workshopThreshold);
+
+  // A coupon can zero out what's actually charged, but it never waives the
+  // minimum order size — check the pre-discount subtotal, not the amount
+  // that ends up charged.
+  if (subtotal < MIN_SUBTOTAL) {
+    return res.status(400).json({ error: `El pedido mínimo es de $${MIN_SUBTOTAL} MXN. Agrega más cantidad o extras para continuar.` });
+  }
 
   let coupon = null;
   if (body.couponCode) {

@@ -1,5 +1,5 @@
 import { money } from '../../utils/money';
-import { ALLOW_WORKSHOP_DROPOFF } from '../../config';
+import { ALLOW_WORKSHOP_DROPOFF, MIN_SUBTOTAL } from '../../config';
 import { EXTRAS, unitSuffix, applicationsFor } from '../../data/services';
 
 export default function StepDetails({ service, sizeId, onSelectSize, qty, onInc, onDec, extras, onToggleExtra }) {
@@ -121,6 +121,11 @@ export default function StepDetails({ service, sizeId, onSelectSize, qty, onInc,
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 14, borderTop: '1px solid var(--color-border)' }}>
           <div style={{ fontSize: 15, fontWeight: 700 }}>Subtotal</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--color-primary)' }}>{money(subtotal)}</div>
+        </div>
+      )}
+      {selectedSize && subtotal < MIN_SUBTOTAL && (
+        <div style={{ fontSize: 13, color: 'oklch(0.5 0.18 25)', background: 'oklch(0.96 0.03 25)', padding: '12px 14px', borderRadius: 10 }}>
+          El pedido mínimo es de {money(MIN_SUBTOTAL)}. Agrega más cantidad o extras para continuar.
         </div>
       )}
     </div>

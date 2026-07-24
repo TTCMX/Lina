@@ -7,7 +7,7 @@ import { isValidEmail } from '../utils/email';
 import { computeDiscount } from '../utils/coupon';
 import { computeDepositAmount } from '../utils/pricing';
 import { wizardContainer } from '../styles';
-import { DEFAULT_PAYMENT_TYPE } from '../config';
+import { DEFAULT_PAYMENT_TYPE, MIN_SUBTOTAL } from '../config';
 import ProgressBar from './agendar/ProgressBar';
 import StepService from './agendar/StepService';
 import StepDetails from './agendar/StepDetails';
@@ -79,7 +79,7 @@ export default function Agendar() {
 
   let canContinue = false;
   if (step === 1) canContinue = !!serviceId;
-  else if (step === 2) canContinue = !!sizeId;
+  else if (step === 2) canContinue = !!sizeId && subtotal >= MIN_SUBTOTAL;
   else if (step === 3) canContinue = !!selectedDate && !!selectedTime && !takenSlots.includes(selectedTime) && isSlotBookable(selectedDate, selectedTime);
   else if (step === 4) canContinue = addressValid;
   else if (step === 5) canContinue = !submitting;
