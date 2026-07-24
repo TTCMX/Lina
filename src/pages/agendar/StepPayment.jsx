@@ -3,7 +3,6 @@ import { money } from '../../utils/money';
 import { computeDiscount } from '../../utils/coupon';
 import { computeDepositAmount } from '../../utils/pricing';
 import { card, inputStyle } from '../../styles';
-import { DEPOSIT_PERCENT } from '../../config';
 
 function qtyUnitLabel(qtyUnit, qty) {
   if (qtyUnit === 'm2') return 'm²';
@@ -110,7 +109,7 @@ export default function StepPayment({
               border: `1.5px solid ${isDeposit ? 'var(--color-primary)' : 'var(--color-border)'}`,
             }}
           >
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Depósito ({DEPOSIT_PERCENT}%)</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>Depósito</div>
             <div style={{ fontSize: 12, color: 'var(--color-text-muted-3)', marginTop: 2 }}>Resto al terminar</div>
             <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--color-primary)', marginTop: 8 }}>{money(depositAmount)}</div>
           </div>
